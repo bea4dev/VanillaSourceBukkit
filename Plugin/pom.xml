@@ -9,7 +9,7 @@
     <version>${revision}</version>
 
     <parent>
-        <groupId>thpmc</groupId>
+        <groupId>com.github.bea4dev</groupId>
         <artifactId>vanilla_source_parent</artifactId>
         <version>${revision}</version>
     </parent>
@@ -47,7 +47,7 @@
                             <relocations>
                                 <relocation>
                                     <pattern>dev.jorel.commandapi</pattern>
-                                    <shadedPattern>thpmc.vanilla_source.relocation.commandapi</shadedPattern>
+                                    <shadedPattern>com.github.bea4dev.vanilla_source.relocation.commandapi</shadedPattern>
                                 </relocation>
                             </relocations>
                         </configuration>
@@ -91,13 +91,13 @@
         <dependency>
             <groupId>org.spigotmc</groupId>
             <artifactId>spigot-api</artifactId>
-            <version>1.20.1-R0.1-SNAPSHOT</version>
+            <version>1.21.1-R0.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>io.netty</groupId>
             <artifactId>netty-all</artifactId>
-            <version>4.1.59.Final</version>
+            <version>4.1.108</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -136,7 +136,7 @@
             <version>5.0.9</version>
         </dependency>
         <dependency>
-            <groupId>thpmc</groupId>
+            <groupId>com.github.bea4dev</groupId>
             <artifactId>vanilla_source_api</artifactId>
             <type>jar</type>
             <version>${revision}</version>
@@ -144,16 +144,8 @@
             <optional>true</optional>
         </dependency>
         <dependency>
-            <groupId>thpmc</groupId>
-            <artifactId>vanilla_source_v1_16_R3</artifactId>
-            <type>jar</type>
-            <version>${revision}</version>
-            <scope>compile</scope>
-            <optional>true</optional>
-        </dependency>
-        <dependency>
-            <groupId>thpmc</groupId>
-            <artifactId>vanilla_source_v1_20_R1</artifactId>
+            <groupId>com.github.bea4dev</groupId>
+            <artifactId>vanilla_source_v1_21_R1</artifactId>
             <type>jar</type>
             <version>${revision}</version>
             <scope>compile</scope>
