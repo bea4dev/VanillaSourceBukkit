@@ -3,26 +3,21 @@ package com.github.bea4dev.vanilla_source.nms.v1_21_R1;
 import com.mojang.serialization.Lifecycle;
 import net.minecraft.core.*;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.network.NetworkManager;
+import net.minecraft.network.Connection;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.*;
-import net.minecraft.resources.MinecraftKey;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.dedicated.DedicatedServer;
-import net.minecraft.server.level.EntityPlayer;
-import net.minecraft.server.network.PlayerConnection;
+import net.minecraft.server.network.ServerCommonPacketListenerImpl;
+import net.minecraft.server.network.ServerGamePacketListenerImpl;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntityLiving;
-import net.minecraft.world.entity.player.EntityHuman;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.state.IBlockData;
-import net.minecraft.world.level.chunk.Chunk;
-import net.minecraft.world.level.chunk.ChunkStatus;
-import net.minecraft.world.level.material.Fluid;
-import net.minecraft.world.phys.AxisAlignedBB;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.material.FluidState;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
-import net.minecraft.world.phys.shapes.VoxelShapes;
 import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.v1_21_R1.CraftChunk;
 import org.bukkit.craftbukkit.v1_21_R1.CraftParticle;
@@ -63,7 +58,7 @@ public class NMSHandler implements INMSHandler {
 
     static {
         try {
-            networkManagerField = PlayerConnection.class.getDeclaredField("h");
+            networkManagerField = ServerCommonPacketListenerImpl.class.getDeclaredField("connection");
             networkManagerField.setAccessible(true);
         } catch (Exception e) { e.printStackTrace(); }
     }
@@ -72,9 +67,9 @@ public class NMSHandler implements INMSHandler {
     @Override
     public Channel getChannel(Player player) {
         try {
-            PlayerConnection playerConnection = ((CraftPlayer) player).getHandle().c;
-            NetworkManager networkManager = (NetworkManager) networkManagerField.get(playerConnection);
-            return networkManager.m;
+            ServerGamePacketListenerImpl playerConnection = ((CraftPlayer) player).getHandle().connection;
+            Connection connection = (Connection) networkManagerField.get(playerConnection);
+            return connection.channel;
         } catch (Exception e) {
             throw new IllegalStateException(e);
         }
@@ -82,7 +77,7 @@ public class NMSHandler implements INMSHandler {
     
     @Override
     public void sendPacket(Player player, Object packet) {
-        ((CraftPlayer) player).getHandle().c.a((Packet<?>) packet);
+        ((CraftPlayer) player).getHandle().connection.sendPacket((Packet<?>) packet);
     }
     
     @Override
@@ -91,34 +86,38 @@ public class NMSHandler implements INMSHandler {
     }
     
     @Override
-    public Object getIBlockDataByCombinedId(int id) {return Block.a(id);}
+    public Object getIBlockDataByCombinedId(int id) { return Block.stateById(id); }
 
     @Override
-    public int getCombinedIdByIBlockData(Object iBlockData) {return Block.i((IBlockData) iBlockData);}
+    public int getCombinedIdByIBlockData(Object iBlockData) { return Block.getId((BlockState) iBlockData); }
 
     @Override
-    public Object getIBlockData(BlockData blockData) {return ((CraftBlockData) blockData).getState();}
+    public Object getIBlockData(BlockData blockData) { return ((CraftBlockData) blockData).getState(); }
 
     @Override
-    public BlockData getBukkitBlockData(Object iBlockData) {return CraftBlockData.fromData((IBlockData) iBlockData);}
+    public BlockData getBukkitBlockData(Object iBlockData) { return CraftBlockData.fromData((BlockState) iBlockData); }
 
     @Override
-    public Object[] createIBlockDataArray(int length) {return new IBlockData[length];}
+    public Object[] createIBlockDataArray(int length) { return new BlockState[length]; }
 
     @Override
-    public boolean isMapChunkPacket(Object packet) {return packet instanceof ClientboundLevelChunkWithLightPacket;}
+    public boolean isMapChunkPacket(Object packet) { return packet instanceof ClientboundLevelChunkWithLightPacket; }
 
     @Override
-    public boolean isMultiBlockChangePacket(Object packet) {return packet instanceof PacketPlayOutMultiBlockChange;}
+    public boolean isMultiBlockChangePacket(Object packet) {
+        return packet instanceof ClientboundSectionBlocksUpdatePacket;
+    }
 
     @Override
-    public boolean isBlockChangePacket(Object packet) {return packet instanceof PacketPlayOutBlockChange;}
+    public boolean isBlockChangePacket(Object packet) { return packet instanceof ClientboundBlockUpdatePacket; }
 
     @Override
-    public boolean isLightUpdatePacket(Object packet) {return packet instanceof PacketPlayOutLightUpdate || packet instanceof ClientboundLevelChunkWithLightPacket;}
+    public boolean isLightUpdatePacket(Object packet) {
+        return packet instanceof ClientboundLightUpdatePacket || packet instanceof ClientboundLevelChunkWithLightPacket;
+    }
     
     @Override
-    public boolean isFlyPacket(Object packet) {return packet instanceof PacketPlayInFlying;}
+    public boolean isFlyPacket(Object packet) { return packet instanceof ServerboundMovePlayerPacket; }
     
     @Override
     public @Nullable Object createBlockChangePacket(ParallelWorld parallelWorld, int blockX, int blockY, int blockZ) {
@@ -152,89 +151,99 @@ public class NMSHandler implements INMSHandler {
     
     @Override
     public void collectBlockCollisions(EngineBlock engineBlock, Collection<EngineBoundingBox> boundingBoxCollection, CollideOption collideOption) {
-        IBlockData iBlockData = ((IBlockData) engineBlock.getNMSBlockData());
-        List<AxisAlignedBB> alignedBBList;
+        BlockState iBlockData = ((BlockState) engineBlock.getNMSBlockData());
+        List<AABB> alignedBBList;
         
         int blockX = engineBlock.getX();
         int blockY = engineBlock.getY();
         int blockZ = engineBlock.getZ();
-        BlockPosition blockPosition = new BlockPosition.MutableBlockPosition(blockX, blockY, blockZ);
+        BlockPos blockPosition = new BlockPos.MutableBlockPos(blockX, blockY, blockZ);
         
         if (collideOption.isIgnorePassableBlocks()) {
-            alignedBBList = iBlockData.k(null, blockPosition).d();
+            alignedBBList = iBlockData.getCollisionShape(null, blockPosition).toAabbs();
         } else {
-            alignedBBList = iBlockData.j(null, blockPosition).d();
+            alignedBBList = iBlockData.getShape(null, blockPosition).toAabbs();
         }
-        
-        Fluid fluid = iBlockData.u();
-        if (!fluid.c()) {
+
+        FluidState fluid = iBlockData.getFluidState();
+        if (!fluid.isEmpty()) {
             switch (collideOption.getFluidCollisionMode()) {
                 case ALWAYS: {
-                    alignedBBList.addAll(getFluidVoxelShape(fluid, engineBlock).d());
+                    alignedBBList.addAll(getFluidVoxelShape(fluid, engineBlock).toAabbs());
                     break;
                 }
                 case SOURCE_ONLY: {
-                    if (fluid.f()) {
-                        alignedBBList.addAll(getFluidVoxelShape(fluid, engineBlock).d());
+                    if (fluid.isSource()) {
+                        alignedBBList.addAll(getFluidVoxelShape(fluid, engineBlock).toAabbs());
                     }
                     break;
                 }
             }
         }
         
-        for (AxisAlignedBB aabb : alignedBBList) {
-            boundingBoxCollection.add(new EngineBlockBoundingBox(aabb.a + blockX, aabb.b + blockY, aabb.c + blockZ, aabb.d + blockX, aabb.e + blockY, aabb.f + blockZ, engineBlock));
+        for (AABB aabb : alignedBBList) {
+            boundingBoxCollection.add(new EngineBlockBoundingBox(
+                    aabb.minX + blockX,
+                    aabb.minY + blockY,
+                    aabb.minZ + blockZ,
+                    aabb.maxX + blockX,
+                    aabb.maxY + blockY,
+                    aabb.maxZ + blockZ,
+                    engineBlock
+            ));
         }
     }
     
-    private VoxelShape getFluidVoxelShape(Fluid fluid, EngineBlock block){
-        return fluid.e() == 9 && checkUpperBlockHasFluid(fluid, block) ? VoxelShapes.b() : VoxelShapes.b(0.0D, 0.0D, 0.0D, 1.0D, (double) getFluidHeight(fluid, block), 1.0D);
+    private VoxelShape getFluidVoxelShape(FluidState fluid, EngineBlock block){
+        return fluid.getAmount() == 9 && checkUpperBlockHasFluid(fluid, block) ?
+                Shapes.block()
+                : Shapes.create(0.0D, 0.0D, 0.0D, 1.0D, getFluidHeight(fluid, block), 1.0D);
     }
     
-    private float getFluidHeight(Fluid fluid, EngineBlock block){
-        return checkUpperBlockHasFluid(fluid, block) ? 1.0F : fluid.d();
+    private float getFluidHeight(FluidState fluid, EngineBlock block){
+        return checkUpperBlockHasFluid(fluid, block) ? 1.0F : fluid.getOwnHeight();
     }
     
-    private boolean checkUpperBlockHasFluid(Fluid fluid, EngineBlock block){
+    private boolean checkUpperBlockHasFluid(FluidState fluid, EngineBlock block){
         EngineWorld world = block.getWorld();
-        IBlockData upperBlockData = (IBlockData) world.getNMSBlockData(block.getX(), block.getY() + 1, block.getZ());
+        BlockState upperBlockData = (BlockState) world.getNMSBlockData(block.getX(), block.getY() + 1, block.getZ());
         if(upperBlockData == null) return false;
         
-        return fluid.a().a(upperBlockData.u().a());
+        return fluid.getType().isSame(upperBlockData.getFluidState().getType());
     }
 
     @Override
     public boolean hasCollision(EngineBlock engineBlock, CollideOption collideOption) {
-        IBlockData iBlockData = ((IBlockData) engineBlock.getNMSBlockData());
+        BlockState iBlockData = ((BlockState) engineBlock.getNMSBlockData());
         boolean hasCollision = false;
 
         int blockX = engineBlock.getX();
         int blockY = engineBlock.getY();
         int blockZ = engineBlock.getZ();
-        BlockPosition blockPosition = new BlockPosition.MutableBlockPosition(blockX, blockY, blockZ);
+        BlockPos blockPosition = new BlockPos.MutableBlockPos(blockX, blockY, blockZ);
 
         if (collideOption.isIgnorePassableBlocks()) {
-            if (!iBlockData.k(null, blockPosition).b()) {
+            if (!iBlockData.getCollisionShape(null, blockPosition).isEmpty()) {
                 hasCollision = true;
             }
         } else {
-            if (!iBlockData.j(null, blockPosition).b()) {
+            if (!iBlockData.getShape(null, blockPosition).isEmpty()) {
                 hasCollision = true;
             }
         }
 
-        Fluid fluid = iBlockData.u();
-        if(!fluid.c()) {
+        FluidState fluid = iBlockData.getFluidState();
+        if(!fluid.isEmpty()) {
             switch (collideOption.getFluidCollisionMode()) {
                 case ALWAYS: {
-                    if(!getFluidVoxelShape(fluid, engineBlock).b()){
+                    if(!getFluidVoxelShape(fluid, engineBlock).isEmpty()){
                         hasCollision = true;
                     }
                     break;
                 }
                 case SOURCE_ONLY: {
-                    if (fluid.b()) {
-                        if(!getFluidVoxelShape(fluid, engineBlock).b()){
+                    if (fluid.isSource()) {
+                        if(!getFluidVoxelShape(fluid, engineBlock).isEmpty()){
                             hasCollision = true;
                         }
                     }
@@ -262,23 +271,23 @@ public class NMSHandler implements INMSHandler {
         int blockY = NumberConversions.floor(y);
         int blockZ = NumberConversions.floor(z);
     
-        IBlockData iBlockData = (IBlockData) world.getNMSBlockData(blockX, blockY, blockZ);
+        BlockState iBlockData = (BlockState) world.getNMSBlockData(blockX, blockY, blockZ);
         if (iBlockData == null) {
             return 1.0F;
         }
     
-        Block block = iBlockData.b();
-        float factor = block.i();
-        if (block != Blocks.C && block != Blocks.lO) {
+        Block block = iBlockData.getBlock();
+        float factor = block.getSpeedFactor();
+        if (block != Blocks.WATER && block != Blocks.BUBBLE_COLUMN) {
             if (factor == 1.0F) {
                 int downY = NumberConversions.floor(y - 0.5000001D);
-                IBlockData halfDown = (IBlockData) world.getNMSBlockData(blockX, downY, blockZ);
+                BlockState halfDown = (BlockState) world.getNMSBlockData(blockX, downY, blockZ);
             
                 if (halfDown == null) {
                     return 1.0F;
                 }
             
-                return halfDown.b().i();
+                return halfDown.getBlock().getSpeedFactor();
             } else {
                 return factor;
             }
@@ -289,8 +298,8 @@ public class NMSHandler implements INMSHandler {
     
     @Override
     public float getBlockFrictionFactor(BlockData blockData) {
-        IBlockData iBlockData = (IBlockData) this.getIBlockData(blockData);
-        return iBlockData.b().h();
+        BlockState iBlockData = (BlockState) this.getIBlockData(blockData);
+        return iBlockData.getBlock().getFriction();
     }
     
     @Override
