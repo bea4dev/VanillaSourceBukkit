@@ -21,13 +21,15 @@ public class BiomeDataContainer {
     
     public Integer grassBlockColorRGB = null;
     
-    public Sound environmentSound = null;
+    public Sound music = null;
     
     public Particle particle = null;
     
     public Object particleData = null;
     
     public float particleAmount = 0.1F;
+
+    public Float temperature = 0.0F;
     
     
     public BiomeDataContainer clone() {
@@ -40,7 +42,7 @@ public class BiomeDataContainer {
         container.skyColorRGB = this.skyColorRGB;
         container.foliageColorRGB = this.foliageColorRGB;
         container.grassBlockColorRGB = this.grassBlockColorRGB;
-        container.environmentSound = this.environmentSound;
+        container.music = this.music;
         container.particle = this.particle;
         container.particleData = this.particleData;
         container.particleAmount = this.particleAmount;
@@ -56,14 +58,14 @@ public class BiomeDataContainer {
         this.skyColorRGB = container.skyColorRGB;
         this.foliageColorRGB = container.foliageColorRGB;
         this.grassBlockColorRGB = container.grassBlockColorRGB;
-        this.environmentSound = container.environmentSound;
+        this.music = container.music;
         this.particle = container.particle;
         this.particleData = container.particleData;
         this.particleAmount = container.particleAmount;
     }
     
     
-    public static enum TemperatureAttribute {
+    public enum TemperatureAttribute {
         NORMAL("gui-temperature-attribute-normal"),
         FROZEN("gui-temperature-attribute-frozen");
         
@@ -74,7 +76,7 @@ public class BiomeDataContainer {
         }
     }
     
-    public static enum GrassColorAttribute {
+    public enum GrassColorAttribute {
         NORMAL("gui-grass-color-attribute-normal"),
         DARK_FOREST("gui-grass-color-attribute-dark-forest"),
         SWAMP("gui-grass-color-attribute-swamp");

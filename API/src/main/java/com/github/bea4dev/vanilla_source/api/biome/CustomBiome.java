@@ -43,7 +43,7 @@ public class CustomBiome extends BiomeSource {
             container.grassBlockColorRGB = Integer.parseInt(Objects.requireNonNull(yml.getString("grass-block-color")).replace("#", ""), 16);
         }
         if (yml.contains("environment-sound")) {
-            container.environmentSound = Sound.valueOf(yml.getString("environment-sound"));
+            container.music = Sound.valueOf(yml.getString("environment-sound"));
         }
         if (yml.contains("particle-type")) {
             container.particle = Particle.valueOf(yml.getString("particle-type"));
@@ -142,8 +142,8 @@ public class CustomBiome extends BiomeSource {
         if (biomeDataContainer.grassBlockColorRGB != null) {
             yml.set("grass-block-color", "#" + String.format("%06x", biomeDataContainer.grassBlockColorRGB));
         }
-        if (biomeDataContainer.environmentSound != null) {
-            yml.set("environment-sound", biomeDataContainer.environmentSound.toString());
+        if (biomeDataContainer.music != null) {
+            yml.set("environment-sound", biomeDataContainer.music.toString());
         }
         if (biomeDataContainer.particle != null) {
             yml.set("particle-type", biomeDataContainer.particle.toString());

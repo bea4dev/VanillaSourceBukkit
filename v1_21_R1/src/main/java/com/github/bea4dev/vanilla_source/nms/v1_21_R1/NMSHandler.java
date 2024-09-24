@@ -7,10 +7,15 @@ import net.minecraft.network.Connection;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.*;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.dedicated.DedicatedServer;
 import net.minecraft.server.network.ServerCommonPacketListenerImpl;
 import net.minecraft.server.network.ServerGamePacketListenerImpl;
+import net.minecraft.sounds.Music;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.biome.AmbientParticleSettings;
+import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.level.biome.BiomeSpecialEffects;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
@@ -49,6 +54,7 @@ import com.github.bea4dev.vanilla_source.nms.v1_21_R1.entity.EntityManager;
 import com.github.bea4dev.vanilla_source.nms.v1_21_R1.packet.PacketManager;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.*;
 
 
@@ -305,18 +311,10 @@ public class NMSHandler implements INMSHandler {
     @Override
     public Object getNMSBiomeByKey(String key) {
         DedicatedServer dedicatedServer = ((CraftServer) Bukkit.getServer()).getServer();
-        BiomeBase biomeBase;
-        IRegistry<BiomeBase> registryWritable = dedicatedServer.aV().d(Registries.ap);
-        ResourceKey<BiomeBase> resourceKey = ResourceKey.a(Registries.ap, new MinecraftKey(key.toLowerCase()));
-        biomeBase = registryWritable.a(resourceKey);
-        if (biomeBase == null) {
-            if(key.contains(":")) {
-                ResourceKey<BiomeBase> newResourceKey = ResourceKey.a(Registries.ap, new MinecraftKey(key.split(":")[0].toLowerCase(), key.split(":")[1].toLowerCase()));
-                biomeBase = registryWritable.a(newResourceKey);
-            } else {
-                return null;
-            }
-        }
+        Biome biomeBase;
+        Registry<Biome> registryWritable = dedicatedServer.registryAccess().registryOrThrow(Registries.BIOME);
+        ResourceKey<Biome> resourceKey = ResourceKey.create(Registries.BIOME, ResourceLocation.parse(key.toLowerCase()));
+        biomeBase = registryWritable.get(resourceKey);
         return biomeBase;
     }
     
@@ -324,159 +322,147 @@ public class NMSHandler implements INMSHandler {
     public void setDefaultBiomeData(BiomeDataContainer container) {
         DedicatedServer dedicatedServer = ((CraftServer) Bukkit.getServer()).getServer();
     
-        ResourceKey<BiomeBase> oldKey = ResourceKey.a(Registries.ap, new MinecraftKey("minecraft", "forest"));
-        IRegistry<BiomeBase> registryWritable = dedicatedServer.aV().d(Registries.ap);
-        BiomeBase forestBiome = registryWritable.a(oldKey);
-        BiomeFog biomeFog = Objects.requireNonNull(forestBiome).h();
-        
-        try {
-            Field b = BiomeFog.class.getDeclaredField("b");
-            Field c = BiomeFog.class.getDeclaredField("c");
-            Field d = BiomeFog.class.getDeclaredField("d");
-            Field e = BiomeFog.class.getDeclaredField("e");
-            b.setAccessible(true);
-            c.setAccessible(true);
-            d.setAccessible(true);
-            e.setAccessible(true);
-            
-            container.fogColorRGB = b.getInt(biomeFog);
-            container.waterColorRGB = c.getInt(biomeFog);
-            container.waterFogColorRGB = d.getInt(biomeFog);
-            container.skyColorRGB = e.getInt(biomeFog);
-        } catch (Exception e) {e.printStackTrace();}
+        ResourceKey<Biome> oldKey = ResourceKey.create(Registries.BIOME, ResourceLocation.parse("minecraft:forest"));
+        Registry<Biome> registryWritable = dedicatedServer.registryAccess().registryOrThrow(Registries.BIOME);
+        Biome forestBiome = registryWritable.getOrThrow(oldKey);
+        BiomeSpecialEffects specialEffects = forestBiome.getSpecialEffects();
+
+        container.fogColorRGB = specialEffects.getFogColor();
+        container.waterColorRGB = specialEffects.getWaterColor();
+        container.waterFogColorRGB = specialEffects.getWaterFogColor();
+        container.skyColorRGB = specialEffects.getSkyColor();
     }
     
     @Override
     public Object createBiome(String name, BiomeDataContainer container) {
         DedicatedServer dedicatedServer = ((CraftServer) Bukkit.getServer()).getServer();
         
-        ResourceKey<BiomeBase> newKey = ResourceKey.a(Registries.ap, new MinecraftKey("custom", name));
+        ResourceKey<Biome> newKey = ResourceKey.create(Registries.BIOME, ResourceLocation.fromNamespaceAndPath("custom", name));
     
-        ResourceKey<BiomeBase> oldKey = ResourceKey.a(Registries.ap, new MinecraftKey("minecraft", "forest"));
-        IRegistry<BiomeBase> registryWritable = dedicatedServer.aV().d(Registries.ap);
-        BiomeBase forestBiome = registryWritable.a(oldKey);
-    
-        BiomeBase.a builder = new BiomeBase.a();
-        builder.a(Objects.requireNonNull(forestBiome).c());
-    
-        Field biomeSettingMobsField = null;
-        try {
-            biomeSettingMobsField = BiomeBase.class.getDeclaredField("k");
-            biomeSettingMobsField.setAccessible(true);
-            BiomeSettingsMobs biomeSettingMobs = (BiomeSettingsMobs) biomeSettingMobsField.get(forestBiome);
-            builder.a(biomeSettingMobs);
-        
-            Field biomeSettingGenField = BiomeBase.class.getDeclaredField("j");
-            biomeSettingGenField.setAccessible(true);
-            BiomeSettingsGeneration biomeSettingGen = (BiomeSettingsGeneration) biomeSettingGenField.get(forestBiome);
-            builder.a(biomeSettingGen);
-        } catch (Exception e) {
-            e.printStackTrace();
+        ResourceKey<Biome> oldKey = ResourceKey.create(Registries.BIOME, ResourceLocation.fromNamespaceAndPath("minecraft", "forest"));
+        Registry<Biome> registryWritable = dedicatedServer.registryAccess().registryOrThrow(Registries.BIOME);
+        Biome forestBiome = registryWritable.getOrThrow(oldKey);
+
+        Biome.BiomeBuilder builder = new Biome.BiomeBuilder();
+        builder.hasPrecipitation(forestBiome.hasPrecipitation());
+        builder.mobSpawnSettings(forestBiome.getMobSettings());
+        builder.generationSettings(forestBiome.getGenerationSettings());
+        builder.downfall(forestBiome.climateSettings.downfall());
+
+        Float temperature = container.temperature;
+        if (temperature != null) {
+            builder.temperature(temperature);
         }
-    
-        builder.a(0.2F);
-        builder.b(0.05F);
         
         switch (container.temperatureAttribute) {
             case NORMAL: {
-                builder.a(BiomeBase.TemperatureModifier.a);
+                builder.temperatureAdjustment(Biome.TemperatureModifier.NONE);
                 break;
             }
             case FROZEN: {
-                builder.a(BiomeBase.TemperatureModifier.b);
+                builder.temperatureAdjustment(Biome.TemperatureModifier.FROZEN);
                 break;
             }
         }
     
-        BiomeFog.a newFog = new BiomeFog.a();
+        BiomeSpecialEffects.Builder effectBuilder = new BiomeSpecialEffects.Builder();
         
         switch (container.grassColorAttribute) {
             case NORMAL: {
-                newFog.a(BiomeFog.GrassColor.a);
+                effectBuilder.grassColorModifier(BiomeSpecialEffects.GrassColorModifier.NONE);
                 break;
             }
             case DARK_FOREST: {
-                newFog.a(BiomeFog.GrassColor.b);
+                effectBuilder.grassColorModifier(BiomeSpecialEffects.GrassColorModifier.DARK_FOREST);
                 break;
             }
             case SWAMP: {
-                newFog.a(BiomeFog.GrassColor.c);
+                effectBuilder.grassColorModifier(BiomeSpecialEffects.GrassColorModifier.SWAMP);
                 break;
             }
         }
         
-        newFog.a(container.fogColorRGB);
-        newFog.b(container.waterColorRGB);
-        newFog.c(container.waterFogColorRGB);
-        newFog.d(container.skyColorRGB);
+        effectBuilder.fogColor(container.fogColorRGB);
+        effectBuilder.waterColor(container.waterColorRGB);
+        effectBuilder.waterFogColor(container.waterFogColorRGB);
+        effectBuilder.skyColor(container.skyColorRGB);
         
         if (container.foliageColorRGB != null) {
-            newFog.e(container.foliageColorRGB);
+            effectBuilder.foliageColorOverride(container.foliageColorRGB);
         }
         
         if (container.grassBlockColorRGB != null) {
-            newFog.f(container.grassBlockColorRGB);
+            effectBuilder.grassColorOverride(container.grassBlockColorRGB);
         }
         
-        if (container.environmentSound != null) {
-            newFog.a(Holder.a(CraftSound.getSoundEffect(container.environmentSound)));
+        if (container.music != null) {
+            //effectBuilder.ambientLoopSound(Holder.direct(CraftSound.bukkitToMinecraft(container.music)));
+            effectBuilder.backgroundMusic(
+                    new Music(Holder.direct(CraftSound.bukkitToMinecraft(container.music)), 0, 0, true)
+            );
         }
         
         if (container.particle != null) {
             Object particleData = container.particleData;
             float particleAmount = container.particleAmount;
-            
-            if (particleData == null) {
-                newFog.a(new BiomeParticles(CraftParticle.toNMS(container.particle), particleAmount));
-            } else {
-                newFog.a(new BiomeParticles(CraftParticle.toNMS(container.particle, particleData), particleAmount));
-            }
+
+            effectBuilder.ambientParticle(new AmbientParticleSettings(
+                    CraftParticle.createParticleParam(container.particle, particleData),
+                    particleAmount
+            ));
         }
     
-        builder.a(newFog.a());
-        IRegistryWritable<BiomeBase> iRegistryWritable = (IRegistryWritable<BiomeBase>) dedicatedServer.aV().d(Registries.ap);
+        builder.specialEffects(effectBuilder.build());
+
+        MappedRegistry<Biome> iRegistryWritable = (MappedRegistry<Biome>) dedicatedServer.registryAccess().registryOrThrow(Registries.BIOME);
 
         try {
-            Field frozen = RegistryMaterials.class.getDeclaredField("l");
+            Field frozen = MappedRegistry.class.getDeclaredField("frozen");
             frozen.setAccessible(true);
             frozen.set(iRegistryWritable, false);
         } catch (Exception e) {
             throw new IllegalStateException(e);
         }
 
-        BiomeBase biomeBase = builder.a();
-        iRegistryWritable.a(newKey, biomeBase, Lifecycle.stable());
+        Biome biome = builder.build();
+        iRegistryWritable.register(newKey, biome, RegistrationInfo.BUILT_IN);
 
-        iRegistryWritable.l();
+        iRegistryWritable.freeze();
         
-        return biomeBase;
+        return biome;
+    }
+
+    private static void setValueReflection(Object parent, String fieldName, Object value) throws Exception {
+        Field field = parent.getClass().getDeclaredField(fieldName);
+        field.setAccessible(true);
+        Field modifiersField = Field.class.getDeclaredField("modifiers");
+        modifiersField.setAccessible(true);
+        modifiersField.setInt(field, field.getModifiers() & ~Modifier.PRIVATE & ~Modifier.FINAL);
+        field.set(parent, value);
     }
     
     @Override
     public void setBiomeSettings(String name, BiomeDataContainer container) {
-        BiomeBase biomeBase = (BiomeBase) getNMSBiomeByKey("custom:" + name);
+        Biome biomeBase = (Biome) getNMSBiomeByKey("custom:" + name);
         
         try {
-            /* can't modify final fields...
-            Field d = BiomeBase.ClimateSettings.class.getDeclaredField("d");
-            d.setAccessible(true);
-            Field modifiersField = Field.class.getDeclaredField("modifiers");
-            modifiersField.setAccessible(true);
-            modifiersField.setInt(d, d.getModifiers() & ~Modifier.PRIVATE & ~Modifier.FINAL);
     
-            BiomeBase.TemperatureModifier temperatureModifier = BiomeBase.TemperatureModifier.a;
+            Biome.TemperatureModifier temperatureModifier = Biome.TemperatureModifier.NONE;
             switch (container.temperatureAttribute) {
                 case NORMAL: {
                     break;
                 }
                 case FROZEN: {
-                    temperatureModifier = BiomeBase.TemperatureModifier.b;
+                    temperatureModifier = Biome.TemperatureModifier.FROZEN;
                     break;
                 }
             }
-            d.set(biomeBase.i, temperatureModifier);*/
+            setValueReflection(biomeBase.climateSettings, "temperatureModifier", temperatureModifier);
+            if (container.temperature != null) {
+                setValueReflection(biomeBase.climateSettings, "temperature", container.temperature);
+            }
     
-            BiomeFog biomeFog = biomeBase.h();
+            BiomeSpecialEffects effects = biomeBase.getSpecialEffects();
             
             Field b = BiomeFog.class.getDeclaredField("b");
             Field c = BiomeFog.class.getDeclaredField("c");
@@ -527,8 +513,8 @@ public class NMSHandler implements INMSHandler {
                 g.set(biomeFog, Optional.of(container.grassBlockColorRGB));
             }
     
-            if (container.environmentSound != null) {
-                j1.set(biomeFog, Optional.of(Holder.a(CraftSound.getSoundEffect(container.environmentSound))));
+            if (container.music != null) {
+                j1.set(biomeFog, Optional.of(Holder.a(CraftSound.getSoundEffect(container.music))));
             }
     
             if (container.particle != null) {
