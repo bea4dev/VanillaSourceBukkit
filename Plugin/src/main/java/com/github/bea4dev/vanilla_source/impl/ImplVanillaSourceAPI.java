@@ -46,9 +46,10 @@ public class ImplVanillaSourceAPI extends VanillaSourceAPI {
     
     @Override
     public Collection<ParallelUniverse> getAllUniverse() {return universeMap.values();}
-    
+
+    // TODO : Remove
     @Override
-    public boolean isHigher_v1_18_R1() {return NMSManager.isHigher_v1_18_R1();}
+    public boolean isHigher_v1_18_R1() {return true;}
     
     private boolean isStarted = false;
     

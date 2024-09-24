@@ -199,7 +199,7 @@ public class BiomeGUI {
             ItemStack backWithSaveItem = new ItemBuilder(Material.WRITABLE_BOOK).name(SystemLanguage.getText("gui-back-with-save")).build();
             ItemMeta backWithSaveItemMeta = backWithSaveItem.getItemMeta();
             backWithSaveItemMeta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
-            backWithSaveItemMeta.addEnchant(Enchantment.DURABILITY, 1, true);
+            backWithSaveItemMeta.addEnchant(Enchantment.UNBREAKING, 1, true);
             MenuBackButton P = new MenuBackButton(backWithSaveItem);
             P.listener((event, menu) -> {
                 original.write(newContainer);
@@ -273,16 +273,16 @@ public class BiomeGUI {
             TextInputButton N = new TextInputButton(new ItemBuilder(Material.MUSIC_DISC_13)
                     .name(SystemLanguage.getText("gui-change-environment-sound"))
                     .lore(SystemLanguage.getText("gui-current-selected",
-                            newContainer.environmentSound == null ? "NULL" : newContainer.environmentSound.getKey().toString()))
+                            newContainer.music == null ? "NULL" : newContainer.music.getKey().toString()))
                     .build(),
                     SystemLanguage.getText("gui-change-environment-sound"), SystemLanguage.getText("gui-input-sound-name"));
             N.onInput((p, text) -> {
                 try {
-                    newContainer.environmentSound = Sound.valueOf(text);
+                    newContainer.music = Sound.valueOf(text);
                 } catch (Exception e) {
                     for (Sound sound : Sound.values()) {
                         if (text.equals(sound.getKey().getNamespace())) {
-                            newContainer.environmentSound = sound;
+                            newContainer.music = sound;
                             return null;
                         }
                     }
