@@ -4,6 +4,8 @@ import com.github.bea4dev.vanilla_source.VanillaSource;
 import com.github.bea4dev.vanilla_source.api.VanillaSourceAPI;
 import com.github.bea4dev.vanilla_source.api.camera.Bezier3DPositions;
 import com.github.bea4dev.vanilla_source.api.camera.CameraPositionsManager;
+import com.github.bea4dev.vanilla_source.api.entity.EngineEntity;
+import com.github.bea4dev.vanilla_source.api.entity.controller.EntityController;
 import com.github.bea4dev.vanilla_source.api.entity.tick.TickThread;
 import com.github.bea4dev.vanilla_source.api.nms.INMSHandler;
 import com.github.bea4dev.vanilla_source.api.nms.entity.NMSEntityController;
@@ -11,6 +13,7 @@ import com.github.bea4dev.vanilla_source.api.player.EnginePlayer;
 import com.github.bea4dev.vanilla_source.api.util.collision.CollideOption;
 import com.github.bea4dev.vanilla_source.api.util.math.BezierCurve3D;
 import com.github.bea4dev.vanilla_source.api.util.math.EasingBezier2D;
+import com.github.bea4dev.vanilla_source.api.world.cache.EngineWorld;
 import com.github.bea4dev.vanilla_source.api.world.parallel.ParallelWorld;
 import com.github.bea4dev.vanilla_source.util.TaskHandler;
 import org.bukkit.*;
@@ -182,7 +185,7 @@ public class TestListener implements Listener {
     Color color = Color.BLUE;
     boolean flag = false;
     
-    @EventHandler
+    //@EventHandler
     public void onBreak(BlockBreakEvent event) {
         Player player = event.getPlayer();
         
@@ -204,6 +207,27 @@ public class TestListener implements Listener {
     
         VanillaSourceAPI api = VanillaSourceAPI.getInstance();
         INMSHandler nmsHandler = api.getNMSHandler();
+
+        /*
+        TickThread thread = api.getTickThreadPool().getNextTickThread();
+        EngineWorld world = thread.getThreadLocalCache().getGlobalWorld("world");
+
+        Location location = player.getLocation();
+        EntityController controller = nmsHandler.createNMSEntityController(
+                player.getWorld(),
+                location.getX(),
+                location.getY(),
+                location.getZ(),
+                EntityType.PLAYER,
+                new GameProfile(UUID.randomUUID(), "test")
+        );
+
+        EngineEntity entity = new EngineEntity(world, controller, thread, null);
+        entity.setCollideEntities(true);
+        entity.setGravity(true);
+        entity.setPosition(location.getX(), location.getY(), location.getZ());
+        entity.spawn();
+        player.sendMessage("spawn!");*/
         
         /*
         Location loc = player.getLocation();
@@ -260,9 +284,7 @@ public class TestListener implements Listener {
                 player.sendMessage("Hit face : " + hitFace);
             }
         });*/
-        
-        
-        Location location = player.getLocation();
+
         //INMSHandler nmsHandler = VanillaSourceAPI.getInstance().getNMSHandler();
         
         TickThread tickThread = VanillaSourceAPI.getInstance().getMainThread();

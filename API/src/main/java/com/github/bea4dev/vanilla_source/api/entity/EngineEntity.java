@@ -329,14 +329,14 @@ public class EngineEntity implements TickBase {
      * @return {@link MovementResult}
      */
     public @NotNull MovementResult move(Vector movement){
-        if(!hasBoundingBox()) return MovementResult.EMPTY_MOVEMENT_RESULT;
+        if (!hasBoundingBox()) return MovementResult.EMPTY_MOVEMENT_RESULT;
         
-        if(entityController == null) return MovementResult.EMPTY_MOVEMENT_RESULT;
+        if (entityController == null) return MovementResult.EMPTY_MOVEMENT_RESULT;
         
         EngineBoundingBox originalBoundingBox = getBoundingBox();
-        if(originalBoundingBox == null) return MovementResult.EMPTY_MOVEMENT_RESULT;
+        if (originalBoundingBox == null) return MovementResult.EMPTY_MOVEMENT_RESULT;
         
-        if(movement.equals(new Vector(0.0, 0.0, 0.0))) return MovementResult.EMPTY_MOVEMENT_RESULT;
+        if (movement.isZero()) return MovementResult.EMPTY_MOVEMENT_RESULT;
 
         EngineBoundingBox entityBox = originalBoundingBox.clone().expandForMovement(movement);
         entityBox.expand(movementCollideOption.getBoundingBoxGrow());
@@ -393,20 +393,20 @@ public class EngineEntity implements TickBase {
 
         //apply collision option
         boxList.removeIf(boundingBox -> {
-            if(movementCollideOption.getBoundingBoxCollisionFilter() != null){
-                if(!movementCollideOption.getBoundingBoxCollisionFilter().apply(boundingBox)){
+            if (movementCollideOption.getBoundingBoxCollisionFilter() != null) {
+                if (!movementCollideOption.getBoundingBoxCollisionFilter().apply(boundingBox)) {
                     return true;
                 }
             }
-            if(movementCollideOption.getBlockCollisionFilter() != null){
-                if(boundingBox instanceof EngineBlockBoundingBox) {
+            if (movementCollideOption.getBlockCollisionFilter() != null) {
+                if (boundingBox instanceof EngineBlockBoundingBox) {
                     if (!movementCollideOption.getBlockCollisionFilter().apply(((EngineBlockBoundingBox) boundingBox).getBlock())){
                         return true;
                     }
                 }
             }
-            if(movementCollideOption.getEntityCollisionFilter() != null){
-                if(boundingBox instanceof EngineEntityBoundingBox){
+            if (movementCollideOption.getEntityCollisionFilter() != null) {
+                if (boundingBox instanceof EngineEntityBoundingBox) {
                     return !movementCollideOption.getEntityCollisionFilter().apply(((EngineEntityBoundingBox) boundingBox).getEntity());
                 }
             }
@@ -453,17 +453,17 @@ public class EngineEntity implements TickBase {
         }
     
         //reset position by using bounding box
-        if(limitedMovement.lengthSquared() > 1.0E-7D){
+        if (limitedMovement.lengthSquared() > 1.0E-7D) {
             entityController.resetBoundingBoxForMovement((EngineBoundingBox) this.getBoundingBox().shift(limitedMovement));
-        
+
             EngineBoundingBox boundingBox = getBoundingBox();
             setPosition((boundingBox.getMinX() + boundingBox.getMaxX()) / 2.0D, boundingBox.getMinY(), (boundingBox.getMinZ() + boundingBox.getMaxZ()) / 2.0D);
         }
     
-        if(movement.getY() > 0.0){
+        if (movement.getY() > 0.0) {
             this.onGround = false;
-        }else{
-            this.onGround = movement.getY() != limitedMovement.getY();
+        } else {
+            this.onGround = movement.getY() > limitedMovement.getY();
         }
         
         return new MovementResult(hitCollisions);
@@ -496,7 +496,7 @@ public class EngineEntity implements TickBase {
         if(!(previousChunkX == nextChunkX && previousChunkZ == nextChunkZ) ||
             previousSectionIndex != nextSectionIndex){
             
-            if(chunk == null){
+            if (chunk == null) {
                 chunk = world.getChunkAt(previousChunkX, previousChunkZ);
                 if(!chunk.isLoaded()) return; //unload chunk teleport cancel
             }
@@ -506,12 +506,12 @@ public class EngineEntity implements TickBase {
             }
     
             EngineChunk nextChunk;
-            if(previousChunkX != nextChunkX || previousChunkZ != nextChunkZ){
+            if (previousChunkX != nextChunkX || previousChunkZ != nextChunkZ) {
                 nextChunk = world.getChunkAt(nextBlockX >> 4, nextBlockZ >> 4);
-            }else{
+            } else {
                 nextChunk = chunk;
             }
-            if(nextChunk == null) return; //unload chunk teleport cancel
+            if (nextChunk == null) return; //unload chunk teleport cancel
             
             Set<EngineEntity> nextEntityList = null;
             if (ChunkUtil.isInRangeHeight(nextBlockY)) {
@@ -575,9 +575,9 @@ public class EngineEntity implements TickBase {
     public void tick() {
         invokeScriptFunction("update1");
         invokeScriptFunction("onTick");
-        
+
         //gravity
-        if(hasGravity) velocity.add(new Vector(0.0D, -0.04D, 0.0D));
+        if (hasGravity) velocity.add(new Vector(0.0D, -0.04D, 0.0D));
         
         move(velocity);
     

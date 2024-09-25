@@ -56,7 +56,7 @@ public class ImplEntityControllerPlayer extends ServerPlayer implements NMSEntit
             //Ignore
         }
         
-        super.valid = false;
+        //super.valid = false;
 
         this.serverEntity = new ServerEntity(
                 serverLevel,
@@ -138,7 +138,7 @@ public class ImplEntityControllerPlayer extends ServerPlayer implements NMSEntit
         player.sendPacket(new ClientboundTeleportEntityPacket(this));
         player.sendPacket(new ClientboundSetEntityDataPacket(
                 super.getId(),
-                this.getEntityData().packDirty()
+                this.getEntityData().getNonDefaultValues()
         ));
     }
     
