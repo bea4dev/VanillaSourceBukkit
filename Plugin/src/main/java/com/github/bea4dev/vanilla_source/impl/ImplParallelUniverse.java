@@ -69,17 +69,17 @@ public class ImplParallelUniverse implements ParallelUniverse {
     
     @Override
     public void addDiffs(ParallelUniverse universe) {
-        int indexStart = NMSManager.isHigher_v1_18_R1() ? -4 : 0;
-        int indexEnd = NMSManager.isHigher_v1_18_R1() ? 20 : 16;
+        int indexStart = -4;
+        int indexEnd = 20;
         
-        for(ParallelWorld diffWorld : universe.getAllWorld()){
-            for(ParallelChunk diffChunk : diffWorld.getAllChunk()){
-                for(int i = indexStart; i < indexEnd; i++){
+        for (ParallelWorld diffWorld : universe.getAllWorld()) {
+            for (ParallelChunk diffChunk : diffWorld.getAllChunk()) {
+                for (int i = indexStart; i < indexEnd; i++) {
                     ParallelWorld thisWorld = null;
                     ParallelChunk thisChunk = null;
             
                     SectionTypeArray sectionTypeArray = diffChunk.getSectionTypeArray(i);
-                    if(sectionTypeArray != null) {
+                    if (sectionTypeArray != null) {
                         thisWorld = this.getWorld(diffWorld.getName());
                         thisChunk = ((ImplParallelWorld) thisWorld).createChunkIfAbsent(diffChunk.getChunkX(), diffChunk.getChunkZ());
                         SectionTypeArray thisType = ((ImplParallelChunk) thisChunk).createSectionTypeArrayIfAbsent(i);
@@ -88,7 +88,7 @@ public class ImplParallelUniverse implements ParallelUniverse {
                     }
     
                     SectionLevelArray blockLightLevelArray = diffChunk.getBlockLightSectionLevelArray(i);
-                    if(blockLightLevelArray != null){
+                    if (blockLightLevelArray != null) {
                         if(thisWorld == null) thisWorld = this.getWorld(diffWorld.getName());
                         if(thisChunk == null) thisChunk = ((ImplParallelWorld) thisWorld).createChunkIfAbsent(diffChunk.getChunkX(), diffChunk.getChunkZ());
                         SectionLevelArray thisLevel = ((ImplParallelChunk) thisChunk).createBlockLightSectionLevelArrayIfAbsent(i);
@@ -97,7 +97,7 @@ public class ImplParallelUniverse implements ParallelUniverse {
                     }
     
                     SectionLevelArray skyLightLevelArray = diffChunk.getSkyLightSectionLevelArray(i);
-                    if(skyLightLevelArray != null){
+                    if (skyLightLevelArray != null) {
                         if(thisWorld == null) thisWorld = this.getWorld(diffWorld.getName());
                         if(thisChunk == null) thisChunk = ((ImplParallelWorld) thisWorld).createChunkIfAbsent(diffChunk.getChunkX(), diffChunk.getChunkZ());
                         SectionLevelArray thisLevel = ((ImplParallelChunk) thisChunk).createSkyLightSectionLevelArrayIfAbsent(i);
@@ -109,7 +109,7 @@ public class ImplParallelUniverse implements ParallelUniverse {
         }
         
         
-        for(EnginePlayer EnginePlayer : this.getResidents()){
+        for (EnginePlayer EnginePlayer : this.getResidents()) {
             ((ImplEnginePlayer) EnginePlayer).setUniverseRaw(VanillaSourceAPI.getInstance().getDefaultUniverse());
             EnginePlayer.setUniverse(this);
         }

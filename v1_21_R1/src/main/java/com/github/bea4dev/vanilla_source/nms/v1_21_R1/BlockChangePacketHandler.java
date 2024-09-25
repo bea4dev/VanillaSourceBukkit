@@ -5,21 +5,13 @@ import com.github.bea4dev.vanilla_source.api.world.parallel.ParallelUniverse;
 import com.github.bea4dev.vanilla_source.api.world.parallel.ParallelWorld;
 import com.github.bea4dev.vanilla_source.api.nms.IPacketHandler;
 import com.github.bea4dev.vanilla_source.api.player.EnginePlayer;
+import net.minecraft.network.protocol.game.ClientboundBlockUpdatePacket;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.craftbukkit.v1_21_R1.block.data.CraftBlockData;
 
 import java.lang.reflect.Field;
 
 public class BlockChangePacketHandler implements IPacketHandler {
-
-    public static Field a;
-
-    static {
-        try {
-            a = PacketPlayOutBlockChange.class.getDeclaredField("a");
-            a.setAccessible(true);
-        } catch (Exception e) { e.printStackTrace(); }
-    }
 
     @Override
     public Object rewrite(Object packet, EnginePlayer EnginePlayer, boolean cacheSetting) {
@@ -30,12 +22,12 @@ public class BlockChangePacketHandler implements IPacketHandler {
         ParallelWorld parallelWorld = universe.getWorld(worldName);
 
         try {
-            PacketPlayOutBlockChange blockChange = (PacketPlayOutBlockChange) packet;
-            BlockPosition bp = (BlockPosition) a.get(blockChange);
-            
-            int x = bp.u();
-            int y = bp.v();
-            int z = bp.w();
+            var updatePacket = (ClientboundBlockUpdatePacket) packet;
+            var position = updatePacket.getPos();
+
+            int x = position.getX();
+            int y = position.getY();
+            int z = position.getZ();
     
             ParallelChunk chunk = parallelWorld.getChunk(x >> 4, z >> 4);
             if (chunk == null) {
@@ -49,8 +41,8 @@ public class BlockChangePacketHandler implements IPacketHandler {
             BlockData blockData = chunk.getBlockData(x, y, z);
             if(blockData == null) return packet;
     
-            return new PacketPlayOutBlockChange(bp, ((CraftBlockData) blockData).getState());
-        }catch (Exception e){e.printStackTrace();}
+            return new ClientboundBlockUpdatePacket(position, ((CraftBlockData) blockData).getState());
+        } catch (Exception e) { e.printStackTrace(); }
 
         return packet;
     }

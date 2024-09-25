@@ -2,7 +2,6 @@ package com.github.bea4dev.vanilla_source.nms.v1_21_R1;
 
 import com.github.bea4dev.vanilla_source.api.nms.IPacketHandler;
 import com.github.bea4dev.vanilla_source.api.player.EnginePlayer;
-import org.bukkit.craftbukkit.v1_20_R1.entity.CraftPlayer;
 
 
 public class FlyPacketHandler implements IPacketHandler {

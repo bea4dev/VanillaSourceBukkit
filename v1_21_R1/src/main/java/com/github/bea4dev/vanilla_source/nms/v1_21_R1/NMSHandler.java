@@ -1,6 +1,5 @@
 package com.github.bea4dev.vanilla_source.nms.v1_21_R1;
 
-import com.mojang.serialization.Lifecycle;
 import net.minecraft.core.*;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.Connection;
@@ -9,6 +8,7 @@ import net.minecraft.network.protocol.game.*;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.dedicated.DedicatedServer;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.ServerCommonPacketListenerImpl;
 import net.minecraft.server.network.ServerGamePacketListenerImpl;
 import net.minecraft.sounds.Music;
@@ -19,6 +19,8 @@ import net.minecraft.world.level.biome.BiomeSpecialEffects;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.chunk.LevelChunk;
+import net.minecraft.world.level.chunk.status.ChunkStatus;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.shapes.Shapes;
@@ -54,6 +56,7 @@ import com.github.bea4dev.vanilla_source.nms.v1_21_R1.entity.EntityManager;
 import com.github.bea4dev.vanilla_source.nms.v1_21_R1.packet.PacketManager;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.*;
 
@@ -263,12 +266,12 @@ public class NMSHandler implements INMSHandler {
     
     @Override
     public void registerBlocksForNative() {
-    
+        // None
     }
     
     @Override
     public void registerChunkForNative(String worldName, AsyncEngineChunk chunk) {
-    
+        // None
     }
     
     @Override
@@ -312,7 +315,7 @@ public class NMSHandler implements INMSHandler {
     public Object getNMSBiomeByKey(String key) {
         DedicatedServer dedicatedServer = ((CraftServer) Bukkit.getServer()).getServer();
         Biome biomeBase;
-        Registry<Biome> registryWritable = dedicatedServer.registryAccess().registryOrThrow(Registries.BIOME);
+        MappedRegistry<Biome> registryWritable = (MappedRegistry<Biome>) dedicatedServer.registryAccess().registry(Registries.BIOME).orElseThrow();
         ResourceKey<Biome> resourceKey = ResourceKey.create(Registries.BIOME, ResourceLocation.parse(key.toLowerCase()));
         biomeBase = registryWritable.get(resourceKey);
         return biomeBase;
@@ -323,7 +326,7 @@ public class NMSHandler implements INMSHandler {
         DedicatedServer dedicatedServer = ((CraftServer) Bukkit.getServer()).getServer();
     
         ResourceKey<Biome> oldKey = ResourceKey.create(Registries.BIOME, ResourceLocation.parse("minecraft:forest"));
-        Registry<Biome> registryWritable = dedicatedServer.registryAccess().registryOrThrow(Registries.BIOME);
+        MappedRegistry<Biome> registryWritable = (MappedRegistry<Biome>) dedicatedServer.registryAccess().registry(Registries.BIOME).orElseThrow();
         Biome forestBiome = registryWritable.getOrThrow(oldKey);
         BiomeSpecialEffects specialEffects = forestBiome.getSpecialEffects();
 
@@ -340,7 +343,7 @@ public class NMSHandler implements INMSHandler {
         ResourceKey<Biome> newKey = ResourceKey.create(Registries.BIOME, ResourceLocation.fromNamespaceAndPath("custom", name));
     
         ResourceKey<Biome> oldKey = ResourceKey.create(Registries.BIOME, ResourceLocation.fromNamespaceAndPath("minecraft", "forest"));
-        Registry<Biome> registryWritable = dedicatedServer.registryAccess().registryOrThrow(Registries.BIOME);
+        MappedRegistry<Biome> registryWritable = (MappedRegistry<Biome>) dedicatedServer.registryAccess().registry(Registries.BIOME).orElseThrow();
         Biome forestBiome = registryWritable.getOrThrow(oldKey);
 
         Biome.BiomeBuilder builder = new Biome.BiomeBuilder();
@@ -414,7 +417,7 @@ public class NMSHandler implements INMSHandler {
     
         builder.specialEffects(effectBuilder.build());
 
-        MappedRegistry<Biome> iRegistryWritable = (MappedRegistry<Biome>) dedicatedServer.registryAccess().registryOrThrow(Registries.BIOME);
+        MappedRegistry<Biome> iRegistryWritable = (MappedRegistry<Biome>) dedicatedServer.registryAccess().registry(Registries.BIOME).orElseThrow();
 
         try {
             Field frozen = MappedRegistry.class.getDeclaredField("frozen");
@@ -427,18 +430,34 @@ public class NMSHandler implements INMSHandler {
         Biome biome = builder.build();
         iRegistryWritable.register(newKey, biome, RegistrationInfo.BUILT_IN);
 
-        iRegistryWritable.freeze();
+        // No such method error...why?
+        // iRegistryWritable.freeze();
         
         return biome;
     }
 
-    private static void setValueReflection(Object parent, String fieldName, Object value) throws Exception {
+    public static void setValueReflection(Object parent, String fieldName, Object value) throws Exception {
         Field field = parent.getClass().getDeclaredField(fieldName);
+        setRewritable(field);
+        field.set(parent, value);
+    }
+
+    public static void setRewritable(Field field) throws Exception {
         field.setAccessible(true);
-        Field modifiersField = Field.class.getDeclaredField("modifiers");
+
+        Field modifiersField = null;
+        Method getDeclaredFields0 = Class.class.getDeclaredMethod("getDeclaredFields0", boolean.class);
+        getDeclaredFields0.setAccessible(true);
+        Field[] fields = (Field[]) getDeclaredFields0.invoke(Field.class, false);
+        for (Field f : fields) {
+            if ("modifiers".equals(f.getName())) {
+                modifiersField = f;
+            }
+        }
+        if (modifiersField == null) { throw new IllegalStateException("No modifiers field found!"); }
+
         modifiersField.setAccessible(true);
         modifiersField.setInt(field, field.getModifiers() & ~Modifier.PRIVATE & ~Modifier.FINAL);
-        field.set(parent, value);
     }
     
     @Override
@@ -446,7 +465,6 @@ public class NMSHandler implements INMSHandler {
         Biome biomeBase = (Biome) getNMSBiomeByKey("custom:" + name);
         
         try {
-    
             Biome.TemperatureModifier temperatureModifier = Biome.TemperatureModifier.NONE;
             switch (container.temperatureAttribute) {
                 case NORMAL: {
@@ -463,149 +481,138 @@ public class NMSHandler implements INMSHandler {
             }
     
             BiomeSpecialEffects effects = biomeBase.getSpecialEffects();
-            
-            Field b = BiomeFog.class.getDeclaredField("b");
-            Field c = BiomeFog.class.getDeclaredField("c");
-            Field d1 = BiomeFog.class.getDeclaredField("d");
-            Field e = BiomeFog.class.getDeclaredField("e");
-            Field f = BiomeFog.class.getDeclaredField("f");
-            Field g = BiomeFog.class.getDeclaredField("g");
-            Field h = BiomeFog.class.getDeclaredField("h");
-            Field i = BiomeFog.class.getDeclaredField("i");
-            Field j1 = BiomeFog.class.getDeclaredField("j");
-            b.setAccessible(true);
-            c.setAccessible(true);
-            d1.setAccessible(true);
-            e.setAccessible(true);
-            f.setAccessible(true);
-            g.setAccessible(true);
-            h.setAccessible(true);
-            i.setAccessible(true);
-            j1.setAccessible(true);
-    
-            BiomeFog.GrassColor grassColor = BiomeFog.GrassColor.a;
+
+            BiomeSpecialEffects.GrassColorModifier grassColorModifier = BiomeSpecialEffects.GrassColorModifier.NONE;
             
             switch (container.grassColorAttribute) {
                 case NORMAL: {
                     break;
                 }
                 case DARK_FOREST: {
-                    grassColor = BiomeFog.GrassColor.b;
+                    grassColorModifier = BiomeSpecialEffects.GrassColorModifier.DARK_FOREST;
                     break;
                 }
                 case SWAMP: {
-                    grassColor = BiomeFog.GrassColor.c;
+                    grassColorModifier = BiomeSpecialEffects.GrassColorModifier.SWAMP;
                     break;
                 }
             }
-            h.set(biomeFog, grassColor);
-    
-            b.setInt(biomeFog, container.fogColorRGB);
-            c.setInt(biomeFog, container.waterColorRGB);
-            d1.setInt(biomeFog, container.waterFogColorRGB);
-            e.setInt(biomeFog, container.skyColorRGB);
-    
+            setValueReflection(effects, "grassColorModifier", grassColorModifier);
+
+            setValueReflection(effects, "fogColor", container.fogColorRGB);
+            setValueReflection(effects, "waterColor", container.waterColorRGB);
+            setValueReflection(effects, "waterFog", container.waterFogColorRGB);
+            setValueReflection(effects, "skyColor", container.skyColorRGB);
+
             if (container.foliageColorRGB != null) {
-                f.set(biomeFog, Optional.of(container.foliageColorRGB));
+                setValueReflection(effects, "foliageColorOverride", Optional.of(container.foliageColorRGB));
             }
     
             if (container.grassBlockColorRGB != null) {
-                g.set(biomeFog, Optional.of(container.grassBlockColorRGB));
+                setValueReflection(effects, "grassColorOverride", Optional.of(container.grassBlockColorRGB));
             }
     
             if (container.music != null) {
-                j1.set(biomeFog, Optional.of(Holder.a(CraftSound.getSoundEffect(container.music))));
+                setValueReflection(
+                        effects,
+                        "backgroundMusic",
+                        Optional.of(new Music(CraftSound.bukkitToMinecraftHolder(container.music), 0, 0, true))
+                );
             }
     
             if (container.particle != null) {
                 Object particleData = container.particleData;
                 float particleAmount = container.particleAmount;
-        
-                if (particleData == null) {
-                    i.set(biomeFog, Optional.of(new BiomeParticles(CraftParticle.toNMS(container.particle), particleAmount)));
-                } else {
-                    i.set(biomeFog, Optional.of(new BiomeParticles(CraftParticle.toNMS(container.particle, particleData), particleAmount)));
-                }
+
+                setValueReflection(
+                        effects,
+                        "ambientParticleSettings",
+                        Optional.of(new AmbientParticleSettings(CraftParticle.createParticleParam(container.particle, particleData), particleAmount))
+                );
             }
         } catch (Exception e) { e.printStackTrace(); }
     }
     
     @Override
     public void setBiomeForBlock(org.bukkit.block.Block block, Object biome) {
-        Chunk chunk = (Chunk) ((CraftChunk) block.getChunk()).getHandle(ChunkStatus.n);
-        Objects.requireNonNull(chunk).setBiome(block.getX() >> 2, block.getY() >> 2, block.getZ() >> 2, Holder.a((BiomeBase) biome));
+        LevelChunk chunk = (LevelChunk) ((CraftChunk) block.getChunk()).getHandle(ChunkStatus.FULL);
+        if (chunk == null) { return; }
+        chunk.setBiome(block.getX() >> 2, block.getY() >> 2, block.getZ() >> 2, Holder.direct((Biome) biome));
     }
     
     @Override
     public Object createSpawnEntityPacket(Object iEntity) {
-        return new PacketPlayOutSpawnEntity((Entity) iEntity);
+        Entity entity = (Entity) iEntity;
+        return new ClientboundAddEntityPacket(entity, 0, entity.blockPosition());
     }
     
     @Override
     public Object createSpawnEntityLivingPacket(Object iEntityLiving) {
-        return new PacketPlayOutSpawnEntity((EntityLiving) iEntityLiving);
+        return this.createSpawnEntityPacket(iEntityLiving);
     }
     
     @Override
     public Object createMetadataPacket(Object iEntity) {
         Entity entity = (Entity) iEntity;
-        return new PacketPlayOutEntityMetadata(entity.af(), entity.aj().c());
+        return new ClientboundSetEntityDataPacket(entity.getId(), entity.getEntityData().packDirty());
     }
     
     @Override
     public Object createPlayerInfoPacket(Object iEntityPlayer, WrappedPlayerInfoAction action) {
-        EntityPlayer entityPlayer = (EntityPlayer) iEntityPlayer;
+        ServerPlayer entityPlayer = (ServerPlayer) iEntityPlayer;
 
-        ClientboundPlayerInfoUpdatePacket.a nmsAction = null;
+        ClientboundPlayerInfoUpdatePacket.Action nmsAction = null;
         switch (action) {
             case ADD_PLAYER:
-                nmsAction = ClientboundPlayerInfoUpdatePacket.a.a;
+                nmsAction = ClientboundPlayerInfoUpdatePacket.Action.ADD_PLAYER;
                 break;
             case UPDATE_LATENCY:
-                nmsAction = ClientboundPlayerInfoUpdatePacket.a.e;
+                nmsAction = ClientboundPlayerInfoUpdatePacket.Action.UPDATE_LATENCY;
                 break;
             case UPDATE_GAME_MODE:
-                nmsAction = ClientboundPlayerInfoUpdatePacket.a.c;
+                nmsAction = ClientboundPlayerInfoUpdatePacket.Action.UPDATE_GAME_MODE;
                 break;
             case UPDATE_DISPLAY_NAME:
-                nmsAction = ClientboundPlayerInfoUpdatePacket.a.f;
+                nmsAction = ClientboundPlayerInfoUpdatePacket.Action.UPDATE_DISPLAY_NAME;
                 break;
             case REMOVE_PLAYER:
-                return new ClientboundPlayerInfoRemovePacket(List.of(entityPlayer.ct()));
+                return new ClientboundPlayerInfoRemovePacket(List.of(entityPlayer.getUUID()));
         }
 
         return new ClientboundPlayerInfoUpdatePacket(nmsAction, entityPlayer);
     }
     
     @Override
-    public Object createSpawnNamedEntityPacket(Object iEntityPlayer) {
-        return new PacketPlayOutNamedEntitySpawn((EntityHuman) iEntityPlayer);
-    }
-    
-    @Override
     public Object createTeleportPacket(Object iEntity) {
-        return new PacketPlayOutEntityTeleport((Entity) iEntity);
+        return new ClientboundTeleportEntityPacket((Entity) iEntity);
     }
     
     @Override
     public Object createRelEntityMoveLookPacket(Object iEntity, double deltaX, double deltaY, double deltaZ, float yaw, float pitch) {
-        return new PacketPlayOutEntity.PacketPlayOutRelEntityMoveLook(((Entity) iEntity).af(), (short) (deltaX * 4096), (short) (deltaY * 4096), (short) (deltaZ * 4096),
-                (byte) ((yaw * 256.0F) / 360.0F), (byte) ((pitch * 256.0F) / 360.0F), true);
+        return new ClientboundMoveEntityPacket.PosRot(
+                ((Entity) iEntity).getId(),
+                (short) (deltaX * 4096),
+                (short) (deltaY * 4096),
+                (short) (deltaZ * 4096),
+                (byte) ((yaw * 256.0F) / 360.0F),
+                (byte) ((pitch * 256.0F) / 360.0F),
+                true
+        );
     }
     
     @Override
     public Object createHeadRotationPacket(Object iEntity, float yaw) {
-        return new PacketPlayOutEntityHeadRotation((Entity) iEntity, (byte) ((yaw * 256.0F) / 360.0F));
+        return new ClientboundRotateHeadPacket((Entity) iEntity, (byte) ((yaw * 256.0F) / 360.0F));
     }
     
     @Override
     public Object createEntityDestroyPacket(Object iEntity) {
-        return new PacketPlayOutEntityDestroy(((Entity) iEntity).af());
+        return new ClientboundRemoveEntitiesPacket(((Entity) iEntity).getId());
     }
     
     @Override
     public Object createCameraPacket(Object target) {
-        return new PacketPlayOutCamera((Entity) target);
+        return new ClientboundSetCameraPacket((Entity) target);
     }
     
 }

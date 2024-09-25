@@ -1,12 +1,11 @@
 package com.github.bea4dev.vanilla_source.nms.v1_21_R1;
 
 import net.minecraft.network.protocol.game.ClientboundLevelChunkWithLightPacket;
+import net.minecraft.network.protocol.game.ClientboundLightUpdatePacket;
 import net.minecraft.network.protocol.game.ClientboundLightUpdatePacketData;
-import net.minecraft.network.protocol.game.PacketPlayOutLightUpdate;
-import net.minecraft.server.level.WorldServer;
-import net.minecraft.world.level.chunk.NibbleArray;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.chunk.DataLayer;
 import net.minecraft.world.level.lighting.LevelLightEngine;
-import org.bukkit.craftbukkit.v1_20_R1.CraftWorld;
 import com.github.bea4dev.vanilla_source.api.util.SectionLevelArray;
 import com.github.bea4dev.vanilla_source.api.world.ChunkUtil;
 import com.github.bea4dev.vanilla_source.api.world.parallel.ParallelChunk;
@@ -15,6 +14,7 @@ import com.github.bea4dev.vanilla_source.api.world.parallel.ParallelWorld;
 import com.github.bea4dev.vanilla_source.api.nms.IPacketHandler;
 import com.github.bea4dev.vanilla_source.api.player.EnginePlayer;
 import org.bukkit.World;
+import org.bukkit.craftbukkit.v1_21_R1.CraftWorld;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -22,13 +22,9 @@ import java.util.BitSet;
 import java.util.List;
 
 public class LightUpdatePacketHandler implements IPacketHandler {
-    
-    private static Field chunkInitPacketChunkX;
-    private static Field chunkInitPacketChunkZ;
+
     private static Field chunkInitPacketLightData;
-    
-    private static Field lightUpdatePacketChunkX;
-    private static Field lightUpdatePacketChunkZ;
+
     private static Field lightUpdatePacketData;
     
     private static Field skyYMask;
@@ -40,32 +36,24 @@ public class LightUpdatePacketHandler implements IPacketHandler {
     
     static {
         try {
-            chunkInitPacketChunkX = ClientboundLevelChunkWithLightPacket.class.getDeclaredField("a");
-            chunkInitPacketChunkZ = ClientboundLevelChunkWithLightPacket.class.getDeclaredField("b");
-            chunkInitPacketLightData = ClientboundLevelChunkWithLightPacket.class.getDeclaredField("d");
-            chunkInitPacketChunkX.setAccessible(true);
-            chunkInitPacketChunkZ.setAccessible(true);
-            chunkInitPacketLightData.setAccessible(true);
-    
-            lightUpdatePacketChunkX = PacketPlayOutLightUpdate.class.getDeclaredField("a");
-            lightUpdatePacketChunkZ = PacketPlayOutLightUpdate.class.getDeclaredField("b");
-            lightUpdatePacketData = PacketPlayOutLightUpdate.class.getDeclaredField("c");
-            lightUpdatePacketChunkX.setAccessible(true);
-            lightUpdatePacketChunkZ.setAccessible(true);
-            lightUpdatePacketData.setAccessible(true);
+            chunkInitPacketLightData = ClientboundLevelChunkWithLightPacket.class.getDeclaredField("lightData");
+            NMSHandler.setRewritable(chunkInitPacketLightData);
+
+            lightUpdatePacketData = ClientboundLightUpdatePacket.class.getDeclaredField("lightData");
+            NMSHandler.setRewritable(lightUpdatePacketData);
             
-            skyYMask = ClientboundLightUpdatePacketData.class.getDeclaredField("a");
-            blockYMask = ClientboundLightUpdatePacketData.class.getDeclaredField("b");
-            emptySkyYMask = ClientboundLightUpdatePacketData.class.getDeclaredField("c");
-            emptyBlockYMask = ClientboundLightUpdatePacketData.class.getDeclaredField("d");
-            skyUpdates = ClientboundLightUpdatePacketData.class.getDeclaredField("e");
-            blockUpdates = ClientboundLightUpdatePacketData.class.getDeclaredField("f");
-            skyYMask.setAccessible(true);
-            blockYMask.setAccessible(true);
-            emptySkyYMask.setAccessible(true);
-            emptyBlockYMask.setAccessible(true);
-            skyUpdates.setAccessible(true);
-            blockUpdates.setAccessible(true);
+            skyYMask = ClientboundLightUpdatePacketData.class.getDeclaredField("skyYMask");
+            blockYMask = ClientboundLightUpdatePacketData.class.getDeclaredField("blockYMask");
+            emptySkyYMask = ClientboundLightUpdatePacketData.class.getDeclaredField("emptySkyYMask");
+            emptyBlockYMask = ClientboundLightUpdatePacketData.class.getDeclaredField("emptyBlockYMask");
+            skyUpdates = ClientboundLightUpdatePacketData.class.getDeclaredField("skyUpdates");
+            blockUpdates = ClientboundLightUpdatePacketData.class.getDeclaredField("blockUpdates");
+            NMSHandler.setRewritable(skyYMask);
+            NMSHandler.setRewritable(blockYMask);
+            NMSHandler.setRewritable(emptySkyYMask);
+            NMSHandler.setRewritable(emptyBlockYMask);
+            NMSHandler.setRewritable(skyUpdates);
+            NMSHandler.setRewritable(blockUpdates);
         } catch (Exception e) { e.printStackTrace(); }
     }
     
@@ -80,16 +68,21 @@ public class LightUpdatePacketHandler implements IPacketHandler {
     
         boolean isInitChunkPacket = packet instanceof ClientboundLevelChunkWithLightPacket;
     
-        try{
+        try {
             int chunkX;
             int chunkZ;
+            ClientboundLightUpdatePacketData lightPacketData;
             
             if (isInitChunkPacket) {
-                chunkX = chunkInitPacketChunkX.getInt(packet);
-                chunkZ = chunkInitPacketChunkZ.getInt(packet);
+                var chunkPacket = (ClientboundLevelChunkWithLightPacket) packet;
+                chunkX = chunkPacket.getX();
+                chunkZ = chunkPacket.getZ();
+                lightPacketData = chunkPacket.getLightData();
             } else {
-                chunkX = lightUpdatePacketChunkX.getInt(packet);
-                chunkZ = lightUpdatePacketChunkZ.getInt(packet);
+                var chunkPacket = (ClientboundLightUpdatePacket) packet;
+                chunkX = chunkPacket.getX();
+                chunkZ = chunkPacket.getZ();
+                lightPacketData = chunkPacket.getLightData();
             }
     
             ParallelChunk parallelChunk = parallelWorld.getChunk(chunkX, chunkZ);
@@ -107,13 +100,6 @@ public class LightUpdatePacketHandler implements IPacketHandler {
                 }
                 return packet;
             }
-            
-            Object lightPacketData;
-            if (isInitChunkPacket) {
-                lightPacketData = chunkInitPacketLightData.get(packet);
-            } else {
-                lightPacketData = lightUpdatePacketData.get(packet);
-            }
     
             BitSet skyMaskData = (BitSet) skyYMask.get(lightPacketData);
             BitSet blockMaskData = (BitSet) blockYMask.get(lightPacketData);
@@ -122,11 +108,11 @@ public class LightUpdatePacketHandler implements IPacketHandler {
             List<byte[]> skyUpdatesData = (List<byte[]>) skyUpdates.get(lightPacketData);
             List<byte[]> blockUpdatesData = (List<byte[]>) blockUpdates.get(lightPacketData);
 
-            WorldServer worldServer = ((CraftWorld) world).getHandle();
-            LevelLightEngine levelLightEngine = worldServer.s_();
+            ServerLevel worldServer = ((CraftWorld) world).getHandle();
+            LevelLightEngine levelLightEngine = worldServer.getLightEngine();
 
-            int sectionCount = levelLightEngine.c();
-            int minSection = levelLightEngine.d();
+            int sectionCount = levelLightEngine.getLightSectionCount();
+            int minSection = levelLightEngine.getMinLightSection();
             
             List<byte[]> newSkyUpdates = new ArrayList<>();
             List<byte[]> newBlockUpdates = new ArrayList<>();
@@ -150,17 +136,17 @@ public class LightUpdatePacketHandler implements IPacketHandler {
                     skyUpdateIndex++;
                     
                     if (parallelSky != null) {
-                        NibbleArray nibbleArray = new NibbleArray(data);
-                        parallelSky.threadsafeIteration(nibbleArray::a);
-                        data = nibbleArray.a();
+                        DataLayer nibbleArray = new DataLayer(data);
+                        parallelSky.threadsafeIteration(nibbleArray::set);
+                        data = nibbleArray.getData();
                     }
                     
                     newSkyUpdates.add(data);
                 } else {
                     if (parallelSky != null) {
-                        NibbleArray nibbleArray = new NibbleArray(new byte[2048]);
-                        parallelSky.threadsafeIteration(nibbleArray::a);
-                        newSkyUpdates.add(nibbleArray.a());
+                        DataLayer nibbleArray = new DataLayer(new byte[2048]);
+                        parallelSky.threadsafeIteration(nibbleArray::set);
+                        newSkyUpdates.add(nibbleArray.getData());
                         
                         skyMaskData.set(sectionY);
                         emptySkyMaskData.set(sectionY, false);
@@ -172,17 +158,17 @@ public class LightUpdatePacketHandler implements IPacketHandler {
                     blockUpdateIndex++;
         
                     if (parallelBlock != null) {
-                        NibbleArray nibbleArray = new NibbleArray(data);
-                        parallelBlock.threadsafeIteration(nibbleArray::a);
-                        data = nibbleArray.a();
+                        DataLayer nibbleArray = new DataLayer(data);
+                        parallelBlock.threadsafeIteration(nibbleArray::set);
+                        data = nibbleArray.getData();
                     }
         
                     newBlockUpdates.add(data);
                 } else {
                     if (parallelBlock != null) {
-                        NibbleArray nibbleArray = new NibbleArray(new byte[2048]);
-                        parallelBlock.threadsafeIteration(nibbleArray::a);
-                        newBlockUpdates.add(nibbleArray.a());
+                        DataLayer nibbleArray = new DataLayer(new byte[2048]);
+                        parallelBlock.threadsafeIteration(nibbleArray::set);
+                        newBlockUpdates.add(nibbleArray.getData());
             
                         blockMaskData.set(sectionY);
                         emptyBlockMaskData.set(sectionY, false);
@@ -197,7 +183,7 @@ public class LightUpdatePacketHandler implements IPacketHandler {
             
             return packet;
             
-        } catch (Exception e) {e.printStackTrace();}
+        } catch (Exception e) { e.printStackTrace(); }
         
         return packet;
     }

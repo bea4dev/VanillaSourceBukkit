@@ -7,6 +7,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.world.ChunkLoadEvent;
+import org.bukkit.event.world.ChunkUnloadEvent;
 
 public class ChunkListener implements Listener {
     
@@ -26,6 +27,12 @@ public class ChunkListener implements Listener {
     public void onBlockBreak(BlockBreakEvent event){
         Chunk chunk = event.getBlock().getChunk();
         AsyncWorldCache.update(chunk);
+    }
+
+    @EventHandler
+    public void onChunkUnload(ChunkUnloadEvent event) {
+        Chunk chunk = event.getChunk();
+        AsyncWorldCache.release(chunk);
     }
     
 }

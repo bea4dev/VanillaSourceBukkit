@@ -121,8 +121,8 @@ public class AsyncEngineChunk implements EngineChunk {
         if (!ChunkUtil.isInRangeHeight(blockY)) return 0;
 
         int sectionIndex = ChunkUtil.getSectionIndexAligned(blockY);
-        if(isOutOfSectionIndex(sectionIndex)) return 0;
-        if(chunkSnapshot.isSectionEmpty(sectionIndex)) return 0;
+        if (isOutOfSectionIndex(sectionIndex)) return 0;
+        if (chunkSnapshot.isSectionEmpty(sectionIndex)) return 0;
         return chunkSnapshot.getBlockSkyLight(blockX & 0xF, blockY, blockZ & 0xF);
     }
     
@@ -134,7 +134,7 @@ public class AsyncEngineChunk implements EngineChunk {
         return chunkSnapshot != null;
     }
 
-    public void update(Chunk chunk){this.chunkSnapshot = chunk.getChunkSnapshot();}
+    public void update(Chunk chunk){this.chunkSnapshot = chunk.getChunkSnapshot(true, true, true);}
 
     private boolean isOutOfSectionIndex(int sectionIndex){
         return sectionIndex < 0 || sectionIndex >= entitySlices.length;

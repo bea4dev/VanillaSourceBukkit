@@ -57,7 +57,7 @@ public class ContanManager {
 
             StringBuilder script = new StringBuilder();
 
-            try{
+            try {
                 BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(new FileInputStream(path.toFile()) , StandardCharsets.UTF_8));
                 String data;
                 while ((data = bufferedReader.readLine()) != null) {
@@ -65,7 +65,7 @@ public class ContanManager {
                     script.append('\n');
                 }
                 bufferedReader.close();
-            }catch(Exception e){
+            } catch(Exception e) {
                 throw new IllegalStateException("Failed to load script file '" + path.toFile().getName() + "'.", e);
             }
 

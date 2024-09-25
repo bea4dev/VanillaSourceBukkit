@@ -1,5 +1,6 @@
 package com.github.bea4dev.vanilla_source.api.world.cache;
 
+import com.github.bea4dev.vanilla_source.api.VanillaSourceAPI;
 import org.bukkit.Chunk;
 import org.bukkit.ChunkSnapshot;
 import org.jetbrains.annotations.NotNull;
@@ -15,12 +16,23 @@ public class AsyncWorldCache {
     /**
      * Register chunk cache to be able to get from async thread.
      */
-    public static void register(Chunk chunk){
+    public static void register(Chunk chunk) {
         worldMap.computeIfAbsent(chunk.getWorld().getName(), AsyncEngineWorld::new).setChunk(chunk);
     }
     
-    public static void update(Chunk chunk){
+    public static void update(Chunk chunk) {
         worldMap.computeIfAbsent(chunk.getWorld().getName(), AsyncEngineWorld::new).update(chunk);
+    }
+
+    public static void release(Chunk chunk) {
+        var world = worldMap.get(chunk.getWorld().getName());
+        if (world != null) {
+            world.release(chunk);
+        }
+
+        for (var thread : VanillaSourceAPI.getInstance().getTickThreadPool().getAsyncTickRunnerList()) {
+            thread.releaseChunk(chunk);
+        }
     }
     
     /**

@@ -23,11 +23,14 @@ public class ImplEnginePlayer extends EnginePlayer {
     }
 
     public static void onPlayerQuit(Player player){
-        EnginePlayer EnginePlayer = playerMap.get(player);
-        EnginePlayer.setUniverse(VanillaSourceAPI.getInstance().getDefaultUniverse());
+        EnginePlayer enginePlayer = playerMap.get(player);
+        enginePlayer.setUniverse(VanillaSourceAPI.getInstance().getDefaultUniverse());
         playerMap.remove(player);
-    }
 
+        for (var thread : VanillaSourceAPI.getInstance().getTickThreadPool().getAsyncTickRunnerList()) {
+            thread.removeTracker(enginePlayer);
+        }
+    }
 
 
     private ImplEnginePlayer(Player player) {

@@ -12,7 +12,7 @@ public class NMSManager {
 
     private static Class<?> getImplClass(String className)
             throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException{
-        return Class.forName("thpmc.vanilla_source.nms." + version + "." + className);
+        return Class.forName("com.github.bea4dev.vanilla_source.nms." + version + "." + className);
     }
 
     public static String getVersion() {return version;}
@@ -44,7 +44,7 @@ public class NMSManager {
     public static void setup() {
         String versionName = Bukkit.getServer().getVersion();
         if (Integer.parseInt(versionName.split("\\.")[1]) == 21) {
-            version = "v1_21";
+            version = "v1_21_R1";
         } else {
             throw new IllegalStateException("This version is not supported!"
                     + System.lineSeparator() + "Server version : " + versionName);

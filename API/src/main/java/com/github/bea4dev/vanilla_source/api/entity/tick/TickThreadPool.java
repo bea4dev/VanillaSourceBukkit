@@ -13,7 +13,7 @@ public class TickThreadPool {
     
     public TickThreadPool(int poolSize){
         asyncTickThreadList = new ArrayList<>();
-        for(int i = 0; i < poolSize; i++){
+        for (int i = 0; i < poolSize; i++) {
             asyncTickThreadList.add(new TickThread(i));
         }
         
@@ -28,7 +28,7 @@ public class TickThreadPool {
         asyncTickThreadList.forEach(TickThread::cancel);
     }
     
-    public List<TickThread> getAsyncTickRunnerList() {return asyncTickThreadList;}
+    public List<TickThread> getAsyncTickRunnerList() { return asyncTickThreadList; }
     
     private final ReentrantLock LOCK = new ReentrantLock(true);
     

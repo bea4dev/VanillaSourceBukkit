@@ -2,6 +2,7 @@ package com.github.bea4dev.vanilla_source.api.world.cache.local;
 
 import com.github.bea4dev.vanilla_source.api.entity.tick.TickThread;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
+import org.bukkit.Chunk;
 import org.bukkit.Material;
 import org.bukkit.block.data.BlockData;
 import org.contan_lang.ContanEngine;
@@ -101,5 +102,9 @@ public class ThreadLocalEngineWorld implements EngineWorld {
     @Override
     public @NotNull ContanClassInstance getScriptHandle() {
         return scriptHandle;
+    }
+
+    public void releaseChunk(Chunk chunk) {
+        chunkMap.remove(ChunkUtil.getChunkKey(chunk.getX(), chunk.getZ()));
     }
 }

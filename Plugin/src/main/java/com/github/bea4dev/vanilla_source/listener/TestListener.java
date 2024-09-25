@@ -97,13 +97,13 @@ public class TestListener implements Listener {
                         }
                     
                         BezierCurve3D current = endCurve;
-                        while (true){
+                        while (true) {
                         
-                            for(double t = 0.0; t < 1.0; t += 0.025){
+                            for (double t = 0.0; t < 1.0; t += 0.025) {
                                 Vector pos = current.getPosition(t);
                             
                                 Particle.DustOptions dustOptions = new Particle.DustOptions(Color.RED, 1);
-                                player.spawnParticle(Particle.REDSTONE, pos.getX(), pos.getY(), pos.getZ(), 0, 0, 0, 0, dustOptions);
+                                player.spawnParticle(Particle.DUST, pos.getX(), pos.getY(), pos.getZ(), 0, 0, 0, 0, dustOptions);
                             }
                         
                             Particle.DustOptions dustOptions = new Particle.DustOptions(Color.BLUE, 1);
@@ -111,10 +111,10 @@ public class TestListener implements Listener {
                             Vector end = current.getEndAnchor();
                             Vector startC = current.getStartControl();
                             Vector endC = current.getEndControl();
-                            player.spawnParticle(Particle.REDSTONE, start.getX(), start.getY(), start.getZ(), 0, 0, 0, 0, dustOptions);
-                            player.spawnParticle(Particle.REDSTONE, end.getX(), end.getY(), end.getZ(), 0, 0, 0, 0, dustOptions);
-                            player.spawnParticle(Particle.REDSTONE, startC.getX(), startC.getY(), startC.getZ(), 0, 0, 0, 0, dustOptions);
-                            player.spawnParticle(Particle.REDSTONE, endC.getX(), endC.getY(), endC.getZ(), 0, 0, 0, 0, dustOptions);
+                            player.spawnParticle(Particle.DUST, start.getX(), start.getY(), start.getZ(), 0, 0, 0, 0, dustOptions);
+                            player.spawnParticle(Particle.DUST, end.getX(), end.getY(), end.getZ(), 0, 0, 0, 0, dustOptions);
+                            player.spawnParticle(Particle.DUST, startC.getX(), startC.getY(), startC.getZ(), 0, 0, 0, 0, dustOptions);
+                            player.spawnParticle(Particle.DUST, endC.getX(), endC.getY(), endC.getZ(), 0, 0, 0, 0, dustOptions);
                         
                             BezierCurve3D previous = current.getPrevious();
                             if(previous == null){
@@ -182,7 +182,7 @@ public class TestListener implements Listener {
     Color color = Color.BLUE;
     boolean flag = false;
     
-    //@EventHandler
+    @EventHandler
     public void onBreak(BlockBreakEvent event) {
         Player player = event.getPlayer();
         

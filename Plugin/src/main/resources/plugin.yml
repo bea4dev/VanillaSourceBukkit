@@ -1,7 +1,7 @@
 name: 'VanillaSource'
 version: ${project.version}
-main: thpmc.vanilla_source.VanillaSource
-api-version: 1.15
+main: com.github.bea4dev.vanilla_source.VanillaSource
+api-version: 1.21
 softdepend: [WorldEdit, Multiverse-Core, Cinema4C]
 load: STARTUP
 #--------------------------------------
