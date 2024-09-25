@@ -1,6 +1,7 @@
 package com.github.bea4dev.vanilla_source.api.entity.tick;
 
 import org.bukkit.Bukkit;
+import org.bukkit.Chunk;
 import org.contan_lang.ContanEngine;
 import org.contan_lang.thread.ContanTickBasedThread;
 import org.contan_lang.variables.primitive.ContanFunctionExpression;
@@ -19,16 +20,6 @@ import java.util.concurrent.*;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class TickThread implements Runnable, ContanTickBasedThread {
-    
-    private static final Set<TickThread> TICK_THREADS = ConcurrentHashMap.newKeySet();
-    
-    public static void removeTrackers(EnginePlayer enginePlayer){
-        for(TickThread tickThread : TICK_THREADS){
-            tickThread.removeTracker(enginePlayer);
-        }
-    }
-    
-    
     public static final int TPS = 20;
     public static final long TIME = 1000 / TPS;
 
@@ -40,6 +31,8 @@ public class TickThread implements Runnable, ContanTickBasedThread {
     private final Set<TickBase> tickOnlyEntities = new HashSet<>();
     
     private final Set<TickBase> addEntities = new HashSet<>();
+
+    private final Set<Chunk> releaseChunks = new HashSet<>();
     
     private final ReentrantLock ADD_LOCK = new ReentrantLock();
     
@@ -49,9 +42,9 @@ public class TickThread implements Runnable, ContanTickBasedThread {
     
     private final int ID;
     
-    public TickThread(int ID){this.ID = ID;}
+    public TickThread(int ID) { this.ID = ID; }
     
-    public int getRunnerID() {return ID;}
+    public int getRunnerID() { return ID; }
     
     /**
      * Get cache of thread-local worlds.
@@ -64,7 +57,16 @@ public class TickThread implements Runnable, ContanTickBasedThread {
         try {
             ADD_LOCK.lock();
             this.addEntities.add(tickBaseEntity);
-        }finally {
+        } finally {
+            ADD_LOCK.unlock();
+        }
+    }
+
+    public void releaseChunk(Chunk chunk) {
+        try {
+            ADD_LOCK.lock();
+            this.releaseChunks.add(chunk);
+        } finally {
             ADD_LOCK.unlock();
         }
     }
@@ -77,19 +79,19 @@ public class TickThread implements Runnable, ContanTickBasedThread {
     
     private double tps = TPS;
     
-    public long getLastTickMS() {return lastTickMS;}
+    public long getLastTickMS() { return lastTickMS; }
     
-    public double getTPS() {return tps;}
+    public double getTPS() { return tps; }
     
     private Thread currentThread = Thread.currentThread();
     
-    public void removeEngineEntityUnsafe(EngineEntity entity) {entities.remove(entity);}
+    public void removeEngineEntityUnsafe(EngineEntity entity) { entities.remove(entity); }
     
     /**
      * Gets the current thread executing tick.
      * @return {@link Thread}
      */
-    public Thread getCurrentThread() {return currentThread;}
+    public Thread getCurrentThread() { return currentThread; }
     
     
     private final Map<EnginePlayer, EntityTracker> trackerMap = new HashMap<>();
@@ -98,15 +100,15 @@ public class TickThread implements Runnable, ContanTickBasedThread {
         return trackerMap.computeIfAbsent(enginePlayer, ep -> new EntityTracker(this, ep));
     }
     
-    private void removeTracker(EnginePlayer enginePlayer){trackerMap.remove(enginePlayer);}
+    public void removeTracker(EnginePlayer enginePlayer) { trackerMap.remove(enginePlayer); }
     
     @Override
     public void run() {
-        if(beforeTime + TIME - 20 > System.currentTimeMillis()) return;
+        if (beforeTime + TIME - 20 > System.currentTimeMillis()) return;
         
-        if(isStopped) return;
+        if (isStopped) return;
         
-        if(i % TPS == 0){
+        if (i % TPS == 0) {
             long time = System.currentTimeMillis();
             tps = ((double)Math.round((20.0 / (((double) (time - beforeTime)) / 1000.0)) * 10))/10;
             beforeTime = time;
@@ -134,7 +136,7 @@ public class TickThread implements Runnable, ContanTickBasedThread {
         boolean forceTrack = false;
         
         //Add entities
-        if(addEntities.size() != 0) {
+        if (!addEntities.isEmpty()) {
             try {
                 ADD_LOCK.lock();
         
@@ -148,6 +150,20 @@ public class TickThread implements Runnable, ContanTickBasedThread {
                 }
         
                 addEntities.clear();
+            } finally {
+                ADD_LOCK.unlock();
+            }
+        }
+
+        // Release chunk
+        if (!releaseChunks.isEmpty()) {
+            try {
+                ADD_LOCK.lock();
+
+                for (Chunk chunk : releaseChunks) {
+                    threadLocalCache.releaseChunk(chunk);
+                }
+                releaseChunks.clear();
             } finally {
                 ADD_LOCK.unlock();
             }

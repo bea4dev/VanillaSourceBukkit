@@ -70,8 +70,6 @@ public interface INMSHandler {
     
     Object createPlayerInfoPacket(Object entityPlayer, WrappedPlayerInfoAction info);
     
-    Object createSpawnNamedEntityPacket(Object entityPlayer);
-    
     Object createTeleportPacket(Object entity);
     
     Object createRelEntityMoveLookPacket(Object entity, double deltaX, double deltaY, double deltaZ, float yaw, float pitch);

@@ -1,35 +1,37 @@
 package com.github.bea4dev.vanilla_source.nms.v1_21_R1;
 
 import it.unimi.dsi.fastutil.shorts.ShortArraySet;
-import net.minecraft.core.SectionPosition;
-import net.minecraft.network.protocol.game.PacketPlayOutMultiBlockChange;
-import net.minecraft.world.level.block.state.IBlockData;
+import net.minecraft.core.SectionPos;
 import com.github.bea4dev.vanilla_source.api.world.parallel.ParallelChunk;
 import com.github.bea4dev.vanilla_source.api.world.parallel.ParallelUniverse;
 import com.github.bea4dev.vanilla_source.api.world.parallel.ParallelWorld;
 import com.github.bea4dev.vanilla_source.api.nms.IPacketHandler;
 import com.github.bea4dev.vanilla_source.api.player.EnginePlayer;
 import com.github.bea4dev.vanilla_source.api.util.SectionTypeArray;
+import net.minecraft.network.protocol.game.ClientboundSectionBlocksUpdatePacket;
+import net.minecraft.world.level.block.state.BlockState;
 
 import java.lang.reflect.Field;
 
 public class MultiBlockChangePacketHandler implements IPacketHandler {
 
-    public static Field b;
-    public static Field c;
-    public static Field d;
+    public static Field sectionPosField;
+    public static Field positionsField;
+    public static Field statesField;
+    private static final ShortArraySet emptyShortArraySet = new ShortArraySet();
+    private static final BlockState[] emptyBlockStateArray = new BlockState[0];
 
     static {
-        try{
-            b = PacketPlayOutMultiBlockChange.class.getDeclaredField("b");
-            c = PacketPlayOutMultiBlockChange.class.getDeclaredField("c");
-            d = PacketPlayOutMultiBlockChange.class.getDeclaredField("d");
+        try {
+            sectionPosField = ClientboundSectionBlocksUpdatePacket.class.getDeclaredField("sectionPos");
+            positionsField = ClientboundSectionBlocksUpdatePacket.class.getDeclaredField("positions");
+            statesField = ClientboundSectionBlocksUpdatePacket.class.getDeclaredField("states");
 
-            b.setAccessible(true);
-            c.setAccessible(true);
-            d.setAccessible(true);
+            NMSHandler.setRewritable(sectionPosField);
+            NMSHandler.setRewritable(positionsField);
+            NMSHandler.setRewritable(statesField);
             
-        }catch (Exception e){e.printStackTrace();}
+        } catch (Exception e) { e.printStackTrace(); }
     }
 
     @Override
@@ -41,21 +43,20 @@ public class MultiBlockChangePacketHandler implements IPacketHandler {
         ParallelWorld parallelWorld = universe.getWorld(worldName);
 
         try {
-    
-            SectionPosition bValue = (SectionPosition) b.get(packet);
+            SectionPos sectionPos = (SectionPos) sectionPosField.get(packet);
             
-            int chunkX = bValue.a();
-            int chunkZ = bValue.c();
+            int chunkX = sectionPos.x();
+            int chunkZ = sectionPos.z();
             
             ParallelChunk parallelChunk = parallelWorld.getChunk(chunkX, chunkZ);
             if (parallelChunk == null) return packet;
             if (!parallelChunk.hasBlockDifferenceData()) return packet;
     
-            SectionTypeArray sectionTypeArray = parallelChunk.getSectionTypeArray(bValue.b());
+            SectionTypeArray sectionTypeArray = parallelChunk.getSectionTypeArray(sectionPos.y());
             if (sectionTypeArray == null) return packet;
             
-            short[] cValue = (short[]) c.get(packet);
-            IBlockData[] dValueClone = ((IBlockData[]) d.get(packet)).clone();
+            short[] cValue = (short[]) positionsField.get(packet);
+            BlockState[] dValueClone = ((BlockState[]) statesField.get(packet)).clone();
             
             for (int i = 0; i < cValue.length; i++) {
                 short coord = cValue[i];
@@ -64,20 +65,20 @@ public class MultiBlockChangePacketHandler implements IPacketHandler {
                 int y = coord & 0xF;
                 int z = (coord >> 4) & 0xF;
                 
-                IBlockData iBlockData = (IBlockData) sectionTypeArray.getType(x, y, z);
+                BlockState iBlockData = (BlockState) sectionTypeArray.getType(x, y, z);
                 if (iBlockData != null) {
                     dValueClone[i] = iBlockData;
                 }
             }
+
             
-            
-            PacketPlayOutMultiBlockChange newPacket = new PacketPlayOutMultiBlockChange(bValue, new ShortArraySet(), new IBlockData[0]);
-            b.set(newPacket, bValue);
-            c.set(newPacket, cValue);
-            d.set(newPacket, dValueClone);
+            var newPacket = new ClientboundSectionBlocksUpdatePacket(sectionPos, emptyShortArraySet, emptyBlockStateArray);
+            sectionPosField.set(newPacket, sectionPos);
+            positionsField.set(newPacket, cValue);
+            statesField.set(newPacket, dValueClone);
             
             return newPacket;
-            
+
         } catch (Exception e) { e.printStackTrace(); }
 
         return packet;

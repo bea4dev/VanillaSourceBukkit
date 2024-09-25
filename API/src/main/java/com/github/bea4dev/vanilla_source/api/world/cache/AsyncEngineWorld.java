@@ -93,24 +93,21 @@ public class AsyncEngineWorld implements EngineWorld {
         return scriptHandle;
     }
     
-    public void setChunk(Chunk chunk){
+    public void setChunk(Chunk chunk) {
         AsyncEngineChunk engineChunk = asyncChunkMap.get(ChunkUtil.getChunkKey(chunk.getX(), chunk.getZ()));
         if (engineChunk == null) {
             engineChunk = asyncChunkMap.computeIfAbsent(ChunkUtil.getChunkKey(chunk.getX(), chunk.getZ()), c -> new AsyncEngineChunk(chunk));
         }
         engineChunk.update(chunk);
-
-        if(VSSettings.isUseJNI()) {
-            VanillaSourceAPI.getInstance().getNMSHandler().registerChunkForNative(worldName, engineChunk);
-        }
     }
     
-    public void update(Chunk chunk){
+    public void update(Chunk chunk) {
         AsyncEngineChunk engineChunk = asyncChunkMap.computeIfAbsent(ChunkUtil.getChunkKey(chunk.getX(), chunk.getZ()), c -> new AsyncEngineChunk(chunk));
         engineChunk.update(chunk);
-        if(VSSettings.isUseJNI()) {
-            VanillaSourceAPI.getInstance().getNMSHandler().registerChunkForNative(worldName, engineChunk);
-        }
+    }
+
+    public void release(Chunk chunk) {
+        asyncChunkMap.remove(ChunkUtil.getChunkKey(chunk.getX(), chunk.getZ()));
     }
     
 }

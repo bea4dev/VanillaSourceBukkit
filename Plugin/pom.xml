@@ -35,7 +35,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
-                <version>3.3.0</version>
+                <version>3.6.0</version>
                 <executions>
                     <execution>
                         <phase>package</phase>
@@ -97,7 +97,7 @@
         <dependency>
             <groupId>io.netty</groupId>
             <artifactId>netty-all</artifactId>
-            <version>4.1.108</version>
+            <version>4.1.59.Final</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -166,7 +166,7 @@
         <dependency>
             <groupId>dev.jorel</groupId>
             <artifactId>commandapi-bukkit-shade</artifactId>
-            <version>9.0.3</version>
+            <version>9.5.3</version>
         </dependency>
         <dependency>
             <groupId>com.mojang</groupId>

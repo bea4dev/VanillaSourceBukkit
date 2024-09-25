@@ -1,19 +1,19 @@
 package com.github.bea4dev.vanilla_source.nms.v1_21_R1;
 
 import net.minecraft.core.Holder;
-import net.minecraft.core.IRegistry;
+import net.minecraft.core.Registry;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.protocol.game.ClientboundLevelChunkPacketData;
 import net.minecraft.network.protocol.game.ClientboundLevelChunkWithLightPacket;
 import net.minecraft.server.dedicated.DedicatedServer;
-import net.minecraft.world.level.ChunkCoordIntPair;
-import net.minecraft.world.level.biome.BiomeBase;
-import net.minecraft.world.level.block.state.IBlockData;
+import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.*;
 import net.minecraft.world.ticks.LevelChunkTicks;
 import org.bukkit.Bukkit;
-import org.bukkit.craftbukkit.v1_20_R1.CraftChunk;
-import org.bukkit.craftbukkit.v1_20_R1.CraftServer;
+import org.bukkit.craftbukkit.v1_21_R1.CraftChunk;
+import org.bukkit.craftbukkit.v1_21_R1.CraftServer;
 import com.github.bea4dev.vanilla_source.api.world.parallel.ParallelChunk;
 import com.github.bea4dev.vanilla_source.api.world.parallel.ParallelUniverse;
 import com.github.bea4dev.vanilla_source.api.world.parallel.ParallelWorld;
@@ -22,52 +22,45 @@ import com.github.bea4dev.vanilla_source.api.player.EnginePlayer;
 import com.github.bea4dev.vanilla_source.api.util.SectionTypeArray;
 import org.bukkit.ChunkSnapshot;
 import org.bukkit.World;
-import org.bukkit.craftbukkit.v1_20_R1.CraftChunkSnapshot;
-import org.bukkit.craftbukkit.v1_20_R1.CraftWorld;
+import org.bukkit.craftbukkit.v1_21_R1.CraftChunkSnapshot;
+import org.bukkit.craftbukkit.v1_21_R1.CraftWorld;
 import com.github.bea4dev.vanilla_source.api.world.cache.AsyncWorldCache;
 
 import java.lang.reflect.Field;
 
 public class MapChunkPacketHandler implements IPacketHandler {
     
-    private static Field a;
-    private static Field b;
-    private static Field c;
+    private static Field lightChunkXField;
+    private static Field lightChunkZField;
+    private static Field lightChunkDataField;
     
-    private static Field bData;
-    private static Field cData;
-    private static Field dData;
+    private static Field blockEntitiesDataField;
 
     private static Field blockids;
     private static Field biome;
 
-    
     private static Field emptyBlockIDs;
 
     static {
         try {
-            a = ClientboundLevelChunkWithLightPacket.class.getDeclaredField("a");
-            b = ClientboundLevelChunkWithLightPacket.class.getDeclaredField("b");
-            c = ClientboundLevelChunkWithLightPacket.class.getDeclaredField("c");
-            a.setAccessible(true);
-            b.setAccessible(true);
-            c.setAccessible(true);
+            lightChunkXField = ClientboundLevelChunkWithLightPacket.class.getDeclaredField("x");
+            lightChunkZField = ClientboundLevelChunkWithLightPacket.class.getDeclaredField("z");
+            lightChunkDataField = ClientboundLevelChunkWithLightPacket.class.getDeclaredField("chunkData");
+            NMSHandler.setRewritable(lightChunkXField);
+            NMSHandler.setRewritable(lightChunkZField);
+            NMSHandler.setRewritable(lightChunkDataField);
 
-            bData = ClientboundLevelChunkPacketData.class.getDeclaredField("b");
-            cData = ClientboundLevelChunkPacketData.class.getDeclaredField("c");
-            dData = ClientboundLevelChunkPacketData.class.getDeclaredField("d");
-            bData.setAccessible(true);
-            cData.setAccessible(true);
-            dData.setAccessible(true);
+            blockEntitiesDataField = ClientboundLevelChunkPacketData.class.getDeclaredField("blockEntitiesData");
+            NMSHandler.setRewritable(blockEntitiesDataField);
 
             blockids = CraftChunkSnapshot.class.getDeclaredField("blockids");
             biome = CraftChunkSnapshot.class.getDeclaredField("biome");
             blockids.setAccessible(true);
             biome.setAccessible(true);
-            
+
             emptyBlockIDs = CraftChunk.class.getDeclaredField("emptyBlockIDs");
             emptyBlockIDs.setAccessible(true);
-        }catch (Exception e){e.printStackTrace();}
+        } catch (Exception e) { e.printStackTrace(); }
     }
 
     @Override
@@ -82,10 +75,10 @@ public class MapChunkPacketHandler implements IPacketHandler {
         DedicatedServer dedicatedServer = ((CraftServer) Bukkit.getServer()).getServer();
 
         try {
-            Object packetData = c.get(packet);
+            Object packetData = lightChunkDataField.get(packet);
 
-            int chunkX = a.getInt(packet);
-            int chunkZ = b.getInt(packet);
+            int chunkX = lightChunkXField.getInt(packet);
+            int chunkZ = lightChunkZField.getInt(packet);
 
             ParallelChunk parallelChunk = parallelWorld.getChunk(chunkX, chunkZ);
             if (parallelChunk == null) return packet;
@@ -93,56 +86,55 @@ public class MapChunkPacketHandler implements IPacketHandler {
     
             Object cachedPacketData = parallelChunk.getCachedMapChunkPacket();
             if (cachedPacketData != null){
-                c.set(packet, cachedPacketData);
+                lightChunkDataField.set(packet, cachedPacketData);
                 return packet;
             }
 
             ChunkSnapshot chunkSnapshot = AsyncWorldCache.getChunkCache(worldName, chunkX, chunkZ);
             if (chunkSnapshot == null) return packet;
-            
 
-            DataPaletteBlock<IBlockData>[] cachedDataBlocks = (DataPaletteBlock<IBlockData>[]) blockids.get(chunkSnapshot);
-            PalettedContainerRO<Holder<BiomeBase>>[] cachedBiomePalettes = (PalettedContainerRO<Holder<BiomeBase>>[]) biome.get(chunkSnapshot);
+            PalettedContainer<BlockState>[] cachedDataBlocks = (PalettedContainer<BlockState>[]) blockids.get(chunkSnapshot);
+            PalettedContainerRO<Holder<Biome>>[] cachedBiomePalettes = (PalettedContainerRO<Holder<Biome>>[]) biome.get(chunkSnapshot);
             
             int sectionCount = (world.getMaxHeight() - world.getMinHeight()) >> 4;
             int minSection = world.getMinHeight() >> 4;
             
-            ChunkSection[] chunkSections = new ChunkSection[sectionCount];
+            LevelChunkSection[] chunkSections = new LevelChunkSection[sectionCount];
             boolean edited = false;
             
             for (int index = 0; index < sectionCount; index++) {
                 int sectionY = minSection + index;
 
-                ChunkSection chunkSection = null;
+                LevelChunkSection chunkSection = null;
 
                 SectionTypeArray sectionTypeArray = parallelChunk.getSectionTypeArray(sectionY);
                 if (sectionTypeArray != null) {
-                    DataPaletteBlock<IBlockData> cachedBlockData = cachedDataBlocks[index];
-                    PalettedContainerRO<Holder<BiomeBase>> cachedBiomePalette = cachedBiomePalettes[index];
+                    PalettedContainer<BlockState> cachedBlockData = cachedDataBlocks[index];
+                    PalettedContainerRO<Holder<Biome>> cachedBiomePalette = cachedBiomePalettes[index];
 
                     if (cachedBlockData != null) {
-                        DataPaletteBlock<IBlockData> blocks = cachedBlockData.d();
-                        DataPaletteBlock<Holder<BiomeBase>> biomes = cachedBiomePalette.e();
-                        chunkSection = new ChunkSection(blocks, biomes);
+                        PalettedContainer<BlockState> blocks = cachedBlockData.copy();
+                        PalettedContainer<Holder<Biome>> biomes = cachedBiomePalette.recreate();
+                        chunkSection = new LevelChunkSection(blocks, biomes);
                     }
 
                     if (chunkSection == null) {
-                        IRegistry<BiomeBase> biomeRegistry = dedicatedServer.aV().d(Registries.ap);
-                        chunkSection = new ChunkSection(biomeRegistry);
+                        Registry<Biome> biomeRegistry = dedicatedServer.registryAccess().registryOrThrow(Registries.BIOME);
+                        chunkSection = new LevelChunkSection(biomeRegistry);
                     }
     
-                    ChunkSection finalChunkSection = chunkSection;
-                    boolean notEmpty = sectionTypeArray.threadsafeIteration((x, y, z, iBlockData) -> {
-                        finalChunkSection.a(x, y, z, (IBlockData) iBlockData, false);
+                    LevelChunkSection finalChunkSection = chunkSection;
+                    boolean notEmpty = sectionTypeArray.threadsafeIteration((x, y, z, BlockState) -> {
+                        finalChunkSection.setBlockState(x, y, z, (BlockState) BlockState, false);
                     });
                     
                     if (notEmpty) edited = true;
 
                 } else {
                     if (!chunkSnapshot.isSectionEmpty(index)) {
-                        DataPaletteBlock<IBlockData> blocks = cachedDataBlocks[index].d();
-                        DataPaletteBlock<Holder<BiomeBase>> biomes = cachedBiomePalettes[index].e();
-                        chunkSection = new ChunkSection(blocks, biomes);
+                        PalettedContainer<BlockState> blocks = cachedDataBlocks[index].copy();
+                        PalettedContainer<Holder<Biome>> biomes = cachedBiomePalettes[index].recreate();
+                        chunkSection = new LevelChunkSection(blocks, biomes);
                     }
                 }
                 
@@ -153,19 +145,28 @@ public class MapChunkPacketHandler implements IPacketHandler {
                 return packet;
             }
 
-            Chunk chunk = new Chunk(((CraftWorld) world).getHandle(), new ChunkCoordIntPair(chunkX, chunkZ),
-                    ChunkConverter.a, new LevelChunkTicks<>(), new LevelChunkTicks<>(), 0L, chunkSections, null, null);
+            LevelChunk chunk = new LevelChunk(
+                    ((CraftWorld) world).getHandle(),
+                    new ChunkPos(chunkX, chunkZ),
+                    UpgradeData.EMPTY,
+                    new LevelChunkTicks<>(),
+                    new LevelChunkTicks<>(),
+                    0L,
+                    chunkSections,
+                    null,
+                    null
+            );
 
             ClientboundLevelChunkPacketData newPacketData = new ClientboundLevelChunkPacketData(chunk);
 
-            Object dValue = dData.get(packetData);
-            dData.set(newPacketData, dValue);
+            Object blockEntitiesData = blockEntitiesDataField.get(packetData);
+            blockEntitiesDataField.set(newPacketData, blockEntitiesData);
     
             if (cacheSetting) {
                 parallelChunk.setMapChunkPacketCache(newPacketData);
             }
 
-            c.set(packet, newPacketData);
+            lightChunkDataField.set(packet, newPacketData);
             return packet;
 
         } catch (Exception e) { e.printStackTrace(); }

@@ -6,7 +6,7 @@ import com.github.bea4dev.vanilla_source.api.player.EnginePlayer;
 import io.netty.channel.*;
 
 
-public class PacketHandler extends ChannelDuplexHandler{
+public class PacketHandler extends ChannelDuplexHandler {
     
     private final EnginePlayer enginePlayer;
     
@@ -30,21 +30,21 @@ public class PacketHandler extends ChannelDuplexHandler{
 
         INMSHandler nmsHandler = NMSManager.getNMSHandler();
         
-        if(nmsHandler.isMapChunkPacket(packet)){
+        if (nmsHandler.isMapChunkPacket(packet)) {
             packet = NMSManager.getMapChunkPacketHandler().rewrite(packet, enginePlayer, ImplVSSettings.isUseCachedChunkPacket());
         }
     
-        if(nmsHandler.isLightUpdatePacket(packet) && ImplVSSettings.isRewriteLightPacket()){
+        if (nmsHandler.isLightUpdatePacket(packet) && ImplVSSettings.isRewriteLightPacket()) {
             super.write(channelHandlerContext, NMSManager.getLightUpdatePacketHandler().rewrite(packet, enginePlayer, ImplVSSettings.isUseCachedChunkPacket()), channelPromise);
             return;
         }
         
-        if(nmsHandler.isBlockChangePacket(packet)){
+        if (nmsHandler.isBlockChangePacket(packet)) {
             super.write(channelHandlerContext, NMSManager.getBlockChangePacketHandler().rewrite(packet, enginePlayer, ImplVSSettings.isUseCachedChunkPacket()), channelPromise);
             return;
         }
         
-        if(nmsHandler.isMultiBlockChangePacket(packet)){
+        if (nmsHandler.isMultiBlockChangePacket(packet)) {
             super.write(channelHandlerContext, NMSManager.getMultiBlockChangePacketHandler().rewrite(packet, enginePlayer, ImplVSSettings.isUseCachedChunkPacket()), channelPromise);
             return;
         }
