@@ -1,5 +1,6 @@
 package com.github.bea4dev.vanilla_source.api.entity.tick;
 
+import com.github.bea4dev.vanilla_source.api.world.parallel.ParallelUniverse;
 import org.bukkit.Location;
 import org.bukkit.util.NumberConversions;
 import com.github.bea4dev.vanilla_source.api.VanillaSourceAPI;
@@ -27,7 +28,7 @@ public class EntityTracker {
         this.enginePlayer = enginePlayer;
     }
     
-    public void tick(Set<EngineEntity> entities, boolean forceTrack){
+    public void tick(Set<EngineEntity> entities, boolean forceTrack) {
         tick++;
     
         //Collect tracking entities
@@ -43,8 +44,11 @@ public class EntityTracker {
                 if (location.getWorld() == null) {
                     continue;
                 }
+
+                ParallelUniverse entityUniverse = entity.getUniverse();
+
                 if (!location.getWorld().getName().equals(Objects.requireNonNull(pl.getWorld()).getName())
-                        || enginePlayer.getUniverse() != entity.getUniverse()) {
+                        || (entityUniverse != null && enginePlayer.getUniverse() != entityUniverse)) {
                     //Stop tracking
                     if (trackedEntities.contains(entity)) {
                         entity.hide(enginePlayer);
@@ -56,7 +60,6 @@ public class EntityTracker {
         
                 int entityChunkX = location.getBlockX() >> 4;
                 int entityChunkZ = location.getBlockZ() >> 4;
-                
                 if (Math.abs(entityChunkX - playerChunkX) + Math.abs(entityChunkZ - playerChunkZ) <= drawDistance) {
                     //in range
                     if (!trackedEntities.contains(entity) && trackedEntities.size() <= (enginePlayer.getEntityTrackLimit() / VanillaSourceAPI.getInstance().getTickThreadPool().getPoolSize())) {

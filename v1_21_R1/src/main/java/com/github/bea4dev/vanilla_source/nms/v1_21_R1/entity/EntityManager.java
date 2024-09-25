@@ -19,12 +19,14 @@ public class EntityManager {
         
         switch (type){
             case PLAYER: {
-                return new ImplEntityControllerPlayer(
+                var controller = new ImplEntityControllerPlayer(
                         MinecraftServer.getServer(),
                         worldServer,
                         (GameProfile) data,
                         ClientInformation.createDefault()
                 );
+                controller.setPos(x, y, z);
+                return controller;
             }
             
             case ITEM: {
