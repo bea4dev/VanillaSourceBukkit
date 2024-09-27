@@ -1,9 +1,11 @@
 package com.github.bea4dev.vanilla_source.api.contan;
 
 import com.github.bea4dev.vanilla_source.api.contan.functions.Floor;
+import com.github.bea4dev.vanilla_source.api.contan.functions.PrintIntoLogger;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
+import org.bukkit.block.Block;
 import org.bukkit.util.Vector;
 import org.contan_lang.ContanEngine;
 import org.contan_lang.ContanModule;
@@ -34,7 +36,7 @@ public class ContanUtil {
             utilModule = contanEngine.compile("vs_util", utilCode);
             utilModule.initialize(contanEngine.getMainThread());
             ContanObjectReference instance = utilModule.getModuleEnvironment().getVariable("instance");
-            if (instance == null) {throw new IllegalStateException("");}
+            if (instance == null) { throw new IllegalStateException(""); }
 
             EMPTY_CLASS_INSTANCE = (ContanClassInstance) instance.getContanObject();
         } catch (Exception e) {
@@ -42,6 +44,7 @@ public class ContanUtil {
         }
 
         StandardFunctions.FUNCTIONS.put("floor", new Floor(null, new Token(null, "floor", 5, null, null), null));
+        StandardFunctions.FUNCTIONS.put("print", new PrintIntoLogger(null, new Token(null, "print", 5, null, null), null));
         contanEngine.setRuntimeVariable("Vector", new JavaClassObject(contanEngine, Vector.class));
         contanEngine.setRuntimeVariable("Bukkit", new JavaClassObject(contanEngine, Bukkit.class));
         contanEngine.setRuntimeVariable("World", new JavaClassObject(contanEngine, World.class));
