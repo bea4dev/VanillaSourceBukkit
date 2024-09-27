@@ -463,7 +463,7 @@ public class EngineEntity implements TickBase {
         if (movement.getY() > 0.0) {
             this.onGround = false;
         } else {
-            this.onGround = movement.getY() > limitedMovement.getY();
+            this.onGround = movement.getY() < limitedMovement.getY();
         }
         
         return new MovementResult(hitCollisions);

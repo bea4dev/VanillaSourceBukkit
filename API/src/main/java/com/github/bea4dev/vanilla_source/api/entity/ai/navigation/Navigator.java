@@ -98,26 +98,26 @@ public class Navigator {
         }
         
         //Update pathfinding
-        if(!entity.isOnGround()){
+        if (!entity.isOnGround()) {
             return;
         }
-        if(tick % pathfindingInterval == 0){
-            if(pathfindingTask == null){
+        if (tick % pathfindingInterval == 0) {
+            if (pathfindingTask == null) {
                 updatePathfinding(NumberConversions.floor(locX), NumberConversions.floor(locY), NumberConversions.floor(locZ));
-            }else{
-                if(pathfindingTask.isDone()){
+            } else {
+                if (pathfindingTask.isDone()) {
                     updatePathfinding(NumberConversions.floor(locX), NumberConversions.floor(locY), NumberConversions.floor(locZ));
                 }
             }
         }
         
         //Make the entity walk along the path.
-        if(currentPaths == null){
+        if (currentPaths == null) {
             return;
         }
         
         //Get next path point
-        if(currentPaths.size() <= currentPathIndex){
+        if (currentPaths.size() <= currentPathIndex) {
             currentPaths = null;
             currentPathIndex = 0;
             return;
@@ -129,15 +129,15 @@ public class Navigator {
         Vector velocity = nextPosition.clone().add(new Vector(-locX, 0, -locZ));
         double velocityLengthSquared = velocity.lengthSquared();
         
-        if(highAccuracy) {
+        if (highAccuracy) {
             if (velocityLengthSquared == 0.0) {
                 currentPathIndex++;
                 return;
             }
-        }else{
+        } else {
             int blockX = NumberConversions.floor(locX);
             int blockZ = NumberConversions.floor(locZ);
-            if(blockX == next.x && blockZ == next.z){
+            if (blockX == next.x && blockZ == next.z) {
                 currentPathIndex++;
     
                 if(currentPaths.size() <= currentPathIndex){
@@ -153,10 +153,10 @@ public class Navigator {
             }
         }
         
-        if(velocityLengthSquared > speed * speed){
+        if (velocityLengthSquared > speed * speed) {
             velocity.normalize().multiply(speed);
             this.move(velocity);
-        }else{
+        } else {
             this.move(velocity);
             
             Vector position = entity.getLocation().toVector();
@@ -205,8 +205,8 @@ public class Navigator {
      * @param locY entity locY
      * @param locZ entity locZ
      */
-    public void updatePathfinding(int locX, int locY, int locZ){
-        if(navigationGoal == null) return;
+    public void updatePathfinding(int locX, int locY, int locZ) {
+        if (navigationGoal == null) return;
         currentPaths = null;
         /*
         if(highAccuracy){
@@ -216,9 +216,9 @@ public class Navigator {
             if(currentPaths != null) return;
         }*/
         
-        if(!entity.isOnGround()) return;
+        if (!entity.isOnGround()) return;
         
-        if(!asyncPathfinding){
+        if (!asyncPathfinding) {
             BlockPosition start = new BlockPosition(locX, locY, locZ);
             List<BlockPosition> paths = new AsyncAStarMachine(entity.getWorld(), start, navigationGoal, descendingHeight, (int) jumpHeight, 50, avoidEntityCollision, entity.getMovementCollideOption()).runPathFinding();
             
@@ -227,19 +227,19 @@ public class Navigator {
             BlockPosition previousPosition = null;
             int previousDeltaX = 0;
             int previousDeltaZ = 0;
-            for(BlockPosition currentPosition : paths){
+            for (BlockPosition currentPosition : paths) {
                 int currentDeltaX;
                 int currentDeltaZ;
-                if(previousPosition == null){
+                if (previousPosition == null) {
                     previousPosition = currentPosition;
                     currentPaths.add(currentPosition);
                     continue;
-                }else{
+                } else {
                     currentDeltaX = currentPosition.x - previousPosition.x;
                     currentDeltaZ = currentPosition.z - previousPosition.z;
                 }
                 
-                if(previousDeltaX != currentDeltaX || previousDeltaZ != currentDeltaZ){
+                if (previousDeltaX != currentDeltaX || previousDeltaZ != currentDeltaZ) {
                     currentPaths.add(currentPosition);
                     previousDeltaX = currentDeltaX;
                     previousDeltaZ = currentDeltaZ;
@@ -258,7 +258,7 @@ public class Navigator {
         
         //Then finish pathfinding
         this.pathfindingTask.thenAccept(paths -> {
-            if(paths.size() == 0){ //Failure
+            if (paths.size() == 0) { //Failure
                 tickSyncTask = () -> {
                     currentPaths = null;
                     currentPathIndex = 0;
@@ -291,7 +291,7 @@ public class Navigator {
     
     public void setSpeed(float speed) {this.speed = speed;}
     
-    public void setNavigationGoal(BlockPosition navigationGoal) {this.navigationGoal = navigationGoal;}
+    public void setNavigationGoal(BlockPosition navigationGoal) { this.navigationGoal = navigationGoal; }
     
     public ContanObject<?> setNavigationGoalWithFuture(BlockPosition navigationGoal) {
         this.navigationGoal = navigationGoal;
