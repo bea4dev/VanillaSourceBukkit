@@ -69,7 +69,7 @@ public class AsyncAStarMachine {
         return completableFuture;
     }
     
-    public List<BlockPosition> runPathFinding(){
+    public List<BlockPosition> runPathFinding() {
         //Check the start and goal position.
         if(/*!canStandAt(start.x, start.y, start.z) || !canStandAt(goal.x, goal.y, goal.z) ||*/ start.equals(goal)){
             //I couldn't find a path...
@@ -90,7 +90,7 @@ public class AsyncAStarMachine {
         int iteration = 0;
         
         //Start pathfinding
-        while(true){
+        while(true) {
             
             iteration++;
             
