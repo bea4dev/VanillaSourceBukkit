@@ -1,2 +1,8 @@
 jdk:
   - openjdk21
+
+install:
+  - ./mvnw install -DskipTests=true
+
+script:
+  - ./mvnw package
