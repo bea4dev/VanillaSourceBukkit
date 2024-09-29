@@ -74,10 +74,12 @@ public class ImplEntityControllerItem extends ItemEntity implements NMSItemEntit
             player.sendPacket(new ClientboundTeleportEntityPacket(this));
         } else {
             Vector moveDelta = engineEntity.getMoveDelta();
-            player.sendPacket(new ClientboundSetEntityMotionPacket(
-                    super.getId(),
-                    new Vec3(moveDelta.getX(), moveDelta.getY(), moveDelta.getZ())
-            ));
+            if (!moveDelta.isZero()) {
+                player.sendPacket(new ClientboundSetEntityMotionPacket(
+                        super.getId(),
+                        new Vec3(moveDelta.getX(), moveDelta.getY(), moveDelta.getZ())
+                ));
+            }
         }
     
         if (isMetadataChanged) {
@@ -94,7 +96,7 @@ public class ImplEntityControllerItem extends ItemEntity implements NMSItemEntit
         player.sendPacket(new ClientboundAddEntityPacket(this, this.serverEntity));
         player.sendPacket(new ClientboundSetEntityDataPacket(
                 super.getId(),
-                super.getEntityData().packDirty()
+                super.getEntityData().getNonDefaultValues()
         ));
     }
     

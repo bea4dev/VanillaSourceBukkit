@@ -73,15 +73,17 @@ public class ImplEntityControllerArmorStand extends ArmorStand implements NMSArm
             player.sendPacket(new ClientboundTeleportEntityPacket(this));
         } else {
             Vector delta = engineEntity.getMoveDelta();
-            player.sendPacket(new ClientboundMoveEntityPacket.PosRot(
-                    super.getId(),
-                    (short) (delta.getX() * 4096),
-                    (short) (delta.getY() * 4096),
-                    (short) (delta.getZ() * 4096),
-                    (byte) ((super.getYRot() * 256.0F) / 360.0F),
-                    (byte) ((super.getXRot() * 256.0F) / 360.0F),
-                    engineEntity.isOnGround()
-            ));
+            if (!delta.isZero()) {
+                player.sendPacket(new ClientboundMoveEntityPacket.PosRot(
+                        super.getId(),
+                        (short) (delta.getX() * 4096),
+                        (short) (delta.getY() * 4096),
+                        (short) (delta.getZ() * 4096),
+                        (byte) ((super.getYRot() * 256.0F) / 360.0F),
+                        (byte) ((super.getXRot() * 256.0F) / 360.0F),
+                        engineEntity.isOnGround()
+                ));
+            }
         }
 
         if (isMetadataChanged) {
@@ -94,7 +96,7 @@ public class ImplEntityControllerArmorStand extends ArmorStand implements NMSArm
     public void show(EngineEntity engineEntity, EnginePlayer player) {
         player.sendPacket(new ClientboundAddEntityPacket(this, this.serverEntity));
         player.sendPacket(new ClientboundTeleportEntityPacket(this));
-        player.sendPacket(new ClientboundSetEntityDataPacket(super.getId(), this.getEntityData().packDirty()));
+        player.sendPacket(new ClientboundSetEntityDataPacket(super.getId(), this.getEntityData().getNonDefaultValues()));
     }
 
     @Override
