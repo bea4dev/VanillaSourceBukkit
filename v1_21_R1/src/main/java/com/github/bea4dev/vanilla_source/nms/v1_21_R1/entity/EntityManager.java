@@ -37,6 +37,15 @@ public class EntityManager {
             case ARMOR_STAND: {
                 return new ImplEntityControllerArmorStand(worldServer, x, y, z);
             }
+
+            case ITEM_DISPLAY: {
+                var controller = new ImplEntityControllerItemDisplay(worldServer);
+                controller.setPos(x, y, z);
+                if (data != null) {
+                    controller.setItemStack(CraftItemStack.asNMSCopy((ItemStack) data));
+                }
+                return controller;
+            }
         }
         
         throw new IllegalArgumentException("Entity type " + type + " is not supported.");

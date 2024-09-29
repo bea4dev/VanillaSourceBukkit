@@ -157,6 +157,15 @@ public class NMSHandler implements INMSHandler {
     public <T> NMSEntityController createNMSEntityController(World world, double x, double y, double z, EntityType type, @Nullable T data) {
         return EntityManager.createNMSEntityController(world, x, y, z, type, data);
     }
+
+    @Override
+    public Object createSetPassengersPacket(Object entity, int[] passengerIds) {
+        var packet = new ClientboundSetPassengersPacket((Entity) entity);
+        try {
+            setValueReflection(packet, "passengers", passengerIds);
+        } catch (Exception error) { error.printStackTrace(); }
+        return packet;
+    }
     
     @Override
     public void collectBlockCollisions(EngineBlock engineBlock, Collection<EngineBoundingBox> boundingBoxCollection, CollideOption collideOption) {
@@ -443,6 +452,8 @@ public class NMSHandler implements INMSHandler {
     }
 
     public static void setRewritable(Field field) throws Exception {
+        if (field.isAccessible()) { return; }
+
         field.setAccessible(true);
 
         Field modifiersField = null;

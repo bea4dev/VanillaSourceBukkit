@@ -79,6 +79,8 @@ public interface INMSHandler {
     Object createEntityDestroyPacket(Object entity);
     
     Object createCameraPacket(Object target);
+
+    Object createSetPassengersPacket(Object entity, int[] passengerIds);
     
     void collectBlockCollisions(EngineBlock engineBlock, Collection<EngineBoundingBox> boundingBoxCollection, CollideOption collideOption);
     
