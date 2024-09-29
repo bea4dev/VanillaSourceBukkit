@@ -129,6 +129,11 @@
       <id>codemc-snapshots</id>
       <url>https://repo.codemc.io/repository/maven-snapshots/</url>
     </repository>
+    <repository>
+      <id>nexus</id>
+      <name>Lumine Public</name>
+      <url>https://mvn.lumine.io/repository/maven-public/</url>
+    </repository>
   </repositories>
 
   <dependencies>
@@ -183,6 +188,12 @@
       <artifactId>ArtGUI</artifactId>
       <version>c97620ebed</version>
       <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.ticxo.modelengine</groupId>
+      <artifactId>ModelEngine</artifactId>
+      <version>R4.0.4</version>
+      <scope>provided</scope>
     </dependency>
   </dependencies>
 

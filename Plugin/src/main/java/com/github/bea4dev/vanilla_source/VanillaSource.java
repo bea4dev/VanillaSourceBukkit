@@ -24,6 +24,7 @@ import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import com.github.bea4dev.vanilla_source.listener.ChunkListener;
 import com.github.bea4dev.vanilla_source.listener.TestListener;
+import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.logging.Logger;
 
@@ -125,6 +126,16 @@ public final class VanillaSource extends JavaPlugin {
             }, 0, 1);
 
             loadedSuccessfully = true;
+
+            new BukkitRunnable() {
+                private long prevNano = System.nanoTime();
+
+                public void run() {
+                    System.out.println(String.format("%.2f[ms]", ((double) (System.nanoTime() - prevNano)) / 1000000.0));
+
+                    prevNano = System.nanoTime();
+                }
+            }.runTaskTimer(VanillaSource.getPlugin(), 0, 1);
         } catch (Exception error) {
             error.printStackTrace();
 

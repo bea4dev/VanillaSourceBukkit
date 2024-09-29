@@ -5,6 +5,7 @@ import com.github.bea4dev.vanilla_source.api.VanillaSourceAPI;
 import com.github.bea4dev.vanilla_source.api.camera.Bezier3DPositions;
 import com.github.bea4dev.vanilla_source.api.camera.CameraPositionsManager;
 import com.github.bea4dev.vanilla_source.api.entity.EngineEntity;
+import com.github.bea4dev.vanilla_source.api.entity.ai.pathfinding.BlockPosition;
 import com.github.bea4dev.vanilla_source.api.entity.controller.EntityController;
 import com.github.bea4dev.vanilla_source.api.entity.tick.TickThread;
 import com.github.bea4dev.vanilla_source.api.nms.INMSHandler;
@@ -16,6 +17,10 @@ import com.github.bea4dev.vanilla_source.api.util.math.EasingBezier2D;
 import com.github.bea4dev.vanilla_source.api.world.cache.EngineWorld;
 import com.github.bea4dev.vanilla_source.api.world.parallel.ParallelWorld;
 import com.github.bea4dev.vanilla_source.util.TaskHandler;
+import com.ticxo.modelengine.api.ModelEngineAPI;
+import com.ticxo.modelengine.api.entity.Dummy;
+import com.ticxo.modelengine.api.model.ActiveModel;
+import com.ticxo.modelengine.api.model.ModeledEntity;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.event.block.BlockBreakEvent;
@@ -207,6 +212,36 @@ public class TestListener implements Listener {
     
         VanillaSourceAPI api = VanillaSourceAPI.getInstance();
         INMSHandler nmsHandler = api.getNMSHandler();
+
+        Dummy<?> dummy = new Dummy<>();
+
+        var location = player.getLocation();
+        var thread = api.getTickThreadPool().getNextTickThread();
+        var entity = new EngineEntity(
+                thread.getThreadLocalCache().getGlobalWorld(player.getWorld().getName()),
+                nmsHandler.createNMSEntityController(player.getWorld(), location.getX(), location.getY(), location.getZ(), EntityType.ARMOR_STAND, null),
+                thread,
+                null
+        ) {
+            @Override
+            public void tick() {
+                super.tick();
+                var location = player.getLocation();
+                super.aiController.navigator.setNavigationGoal(new BlockPosition(location.getBlockX(), location.getBlockY(), location.getBlockZ()));
+                dummy.syncLocation(super.getPosition().toLocation(player.getWorld(), super.yaw, super.pitch));
+            }
+        };
+        dummy.setLocation(player.getLocation());
+        dummy.setDetectingPlayers(false);
+        ModeledEntity modeledEntity = ModelEngineAPI.createModeledEntity(dummy);
+        ActiveModel activeModel = ModelEngineAPI.createActiveModel("normal_zombie_be");
+        activeModel.setScale(2.0);
+        var animationHandler = activeModel.getAnimationHandler();
+        animationHandler.playAnimation("attack", 0.3, 0.3, 1, true);
+        modeledEntity.addModel(activeModel, true);
+        dummy.setForceViewing(player, true);
+
+        entity.spawn();
 
         /*
         TickThread thread = api.getTickThreadPool().getNextTickThread();
