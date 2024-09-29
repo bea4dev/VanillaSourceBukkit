@@ -46,6 +46,12 @@ public class EntityManager {
                 }
                 return controller;
             }
+
+            case INTERACTION: {
+                var controller = new ImplEntityControllerInteraction(worldServer);
+                controller.setPos(x, y, z);
+                return controller;
+            }
         }
         
         throw new IllegalArgumentException("Entity type " + type + " is not supported.");

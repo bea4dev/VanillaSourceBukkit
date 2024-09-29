@@ -597,6 +597,19 @@ public class NMSHandler implements INMSHandler {
     public Object createTeleportPacket(Object iEntity) {
         return new ClientboundTeleportEntityPacket((Entity) iEntity);
     }
+
+    @Override
+    public Object createTeleportPacketWithPosition(Object entity, double x, double y, double z) {
+        var packet = new ClientboundTeleportEntityPacket((Entity) entity);
+        try {
+            setValueReflection(packet, "x", x);
+            setValueReflection(packet, "y", y);
+            setValueReflection(packet, "z", z);
+        } catch (Exception error) {
+            error.printStackTrace();
+        }
+        return packet;
+    }
     
     @Override
     public Object createRelEntityMoveLookPacket(Object iEntity, double deltaX, double deltaY, double deltaZ, float yaw, float pitch) {

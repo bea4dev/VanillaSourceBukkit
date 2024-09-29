@@ -71,6 +71,8 @@ public interface INMSHandler {
     Object createPlayerInfoPacket(Object entityPlayer, WrappedPlayerInfoAction info);
     
     Object createTeleportPacket(Object entity);
+
+    Object createTeleportPacketWithPosition(Object entity, double x, double y, double z);
     
     Object createRelEntityMoveLookPacket(Object entity, double deltaX, double deltaY, double deltaZ, float yaw, float pitch);
     
