@@ -31,11 +31,15 @@ public class EntityManager {
             
             case ITEM: {
                 net.minecraft.world.item.ItemStack itemStack = CraftItemStack.asNMSCopy((ItemStack) data);
-                return new ImplEntityControllerItem(worldServer, x, y, z, itemStack);
+                var controller = new ImplEntityControllerItem(worldServer, x, y, z, itemStack);
+                controller.setPos(x, y, z);
+                return controller;
             }
 
             case ARMOR_STAND: {
-                return new ImplEntityControllerArmorStand(worldServer, x, y, z);
+                var controller = new ImplEntityControllerArmorStand(worldServer, x, y, z);
+                controller.setPos(x, y, z);
+                return controller;
             }
 
             case ITEM_DISPLAY: {
