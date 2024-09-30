@@ -7,6 +7,7 @@ import com.github.bea4dev.vanilla_source.api.camera.CameraPositionsManager;
 import com.github.bea4dev.vanilla_source.api.entity.EngineEntity;
 import com.github.bea4dev.vanilla_source.api.entity.ai.pathfinding.BlockPosition;
 import com.github.bea4dev.vanilla_source.api.entity.controller.EntityController;
+import com.github.bea4dev.vanilla_source.api.entity.model.ModeledEntityHolder;
 import com.github.bea4dev.vanilla_source.api.entity.tick.TickThread;
 import com.github.bea4dev.vanilla_source.api.nms.INMSHandler;
 import com.github.bea4dev.vanilla_source.api.nms.entity.NMSEntityController;
@@ -206,16 +207,22 @@ public class TestListener implements Listener {
     }
     
     @EventHandler
-    public void onPlayerClick(PlayerAnimationEvent event){
+    public void onPlayerClick(PlayerAnimationEvent event) {
         Player player = event.getPlayer();
         if(!player.isSneaking()) return;
     
         VanillaSourceAPI api = VanillaSourceAPI.getInstance();
         INMSHandler nmsHandler = api.getNMSHandler();
 
-        Dummy<?> dummy = new Dummy<>();
+        ActiveModel activeModel = ModelEngineAPI.createActiveModel("normal_zombie_be");
+        activeModel.setScale(2.0);
+        var animationHandler = activeModel.getAnimationHandler();
+        animationHandler.playAnimation("attack", 0.3, 0.3, 1, true);
 
         var location = player.getLocation();
+        var modeledEntityHolder = new ModeledEntityHolder(location);
+        modeledEntityHolder.getModeledEntity().addModel(activeModel, true);
+
         var thread = api.getTickThreadPool().getNextTickThread();
         var entity = new EngineEntity(
                 thread.getThreadLocalCache().getGlobalWorld(player.getWorld().getName()),
@@ -228,19 +235,10 @@ public class TestListener implements Listener {
                 super.tick();
                 var location = player.getLocation();
                 super.aiController.navigator.setNavigationGoal(new BlockPosition(location.getBlockX(), location.getBlockY(), location.getBlockZ()));
-                dummy.syncLocation(super.getPosition().toLocation(player.getWorld(), super.yaw, super.pitch));
             }
         };
-        dummy.setLocation(player.getLocation());
-        dummy.setDetectingPlayers(false);
-        ModeledEntity modeledEntity = ModelEngineAPI.createModeledEntity(dummy);
-        ActiveModel activeModel = ModelEngineAPI.createActiveModel("normal_zombie_be");
-        activeModel.setScale(2.0);
-        var animationHandler = activeModel.getAnimationHandler();
-        animationHandler.playAnimation("attack", 0.3, 0.3, 1, true);
-        modeledEntity.addModel(activeModel, true);
-        dummy.setForceViewing(player, true);
 
+        entity.setModeledEntityHolder(modeledEntityHolder);
         entity.spawn();
 
         /*
