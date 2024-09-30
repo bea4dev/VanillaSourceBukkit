@@ -1,5 +1,5 @@
 # The language to be used within this plugin.
-system-language: 'en_US'
+system-language: 'ja_JP'
 
 # Setting of how many asynchronous entity threads to use.
 entity-threads: 4
@@ -13,3 +13,5 @@ rewrite-light-packet: true
 
 # Setting whether to use Chiyogami's parallel universe function.
 chiyogami-parallel-bridge: true
+
+override-model-engine-updater: false

@@ -7,15 +7,18 @@ public abstract class VSSettings {
     protected static boolean rewriteLightPacket = true;
     
     protected static int entityThreads = 1;
+
+    protected static boolean overrideModelEngineUpdater = false;
     
     protected static boolean useChiyogamiParallelBridge = true;
     
-    public static boolean isUseCachedChunkPacket() {return useCachedChunkPacket;}
+    public static boolean isUseCachedChunkPacket() { return useCachedChunkPacket; }
     
-    public static boolean isRewriteLightPacket() {return rewriteLightPacket;}
+    public static boolean isRewriteLightPacket() { return rewriteLightPacket; }
     
-    public static int getEntityThreads() {return entityThreads;}
+    public static int getEntityThreads() { return entityThreads; }
     
-    public static boolean isUseChiyogamiParallelBridge() {return useChiyogamiParallelBridge;}
-    
+    public static boolean isUseChiyogamiParallelBridge() { return useChiyogamiParallelBridge; }
+
+    public static boolean isOverrideModelEngineUpdater() { return overrideModelEngineUpdater; }
 }

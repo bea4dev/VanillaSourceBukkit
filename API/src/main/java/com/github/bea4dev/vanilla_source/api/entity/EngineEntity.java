@@ -2,6 +2,7 @@ package com.github.bea4dev.vanilla_source.api.entity;
 
 import com.github.bea4dev.vanilla_source.api.entity.controller.EntityAIController;
 import com.github.bea4dev.vanilla_source.api.entity.controller.EntityController;
+import com.github.bea4dev.vanilla_source.api.entity.model.ModeledEntityHolder;
 import com.github.bea4dev.vanilla_source.api.entity.tick.EntityTracker;
 import com.github.bea4dev.vanilla_source.api.entity.tick.TickThread;
 import com.github.bea4dev.vanilla_source.api.player.EnginePlayer;
@@ -70,6 +71,8 @@ public class EngineEntity implements TickBase {
     protected CollideOption movementCollideOption = new CollideOption(FluidCollisionMode.NEVER, true);
     
     public boolean teleported = false;
+
+    protected ModeledEntityHolder modeledEntityHolder = null;
     
     /**
      * Create entity instance.
@@ -152,12 +155,12 @@ public class EngineEntity implements TickBase {
      * Gets whether this entity is dead or not.
      * @return Whether this entity is dead or not.
      */
-    public boolean isDead(){return dead;}
+    public boolean isDead() {return dead;}
 
     /**
      * Kill this entity.
      */
-    public void kill(){
+    public void kill() {
         dead = true;
 
         //remove from chunk
@@ -598,6 +601,11 @@ public class EngineEntity implements TickBase {
         if (collideEntities) {
             performCollideEntity();
         }
+
+        var modeledEntityHolder = this.modeledEntityHolder;
+        if (modeledEntityHolder != null) {
+            modeledEntityHolder.tick(this);
+        }
         
         invokeScriptFunction("update2");
     }
@@ -722,6 +730,11 @@ public class EngineEntity implements TickBase {
      */
     public void show(EnginePlayer player) {
         entityController.show(this, player);
+
+        var modeledEntityHolder = this.modeledEntityHolder;
+        if (modeledEntityHolder != null) {
+            modeledEntityHolder.show(player);
+        }
     }
     
     /**
@@ -730,6 +743,11 @@ public class EngineEntity implements TickBase {
      */
     public void hide(EnginePlayer player) {
         entityController.hide(this, player);
+
+        var modeledEntityHolder = this.modeledEntityHolder;
+        if (modeledEntityHolder != null) {
+            modeledEntityHolder.hide(player);
+        }
     }
     
     /**
@@ -739,5 +757,12 @@ public class EngineEntity implements TickBase {
     public Vector getMoveDelta() {
         return new Vector(x - previousX, y - previousY, z - previousZ);
     }
-    
+
+    public ModeledEntityHolder getModeledEntityHolder() {
+        return modeledEntityHolder;
+    }
+
+    public void setModeledEntityHolder(ModeledEntityHolder modeledEntityHolder) {
+        this.modeledEntityHolder = modeledEntityHolder;
+    }
 }

@@ -5,6 +5,7 @@ import com.github.bea4dev.vanilla_source.api.biome.BiomeStore;
 import com.github.bea4dev.vanilla_source.api.entity.EngineEntity;
 import com.github.bea4dev.vanilla_source.api.entity.tick.MainThreadTimer;
 import com.github.bea4dev.vanilla_source.api.player.EnginePlayer;
+import com.github.bea4dev.vanilla_source.api.setting.VSSettings;
 import com.github.bea4dev.vanilla_source.camera.CameraFileManager;
 import com.github.bea4dev.vanilla_source.command.CommandRegistry;
 import com.github.bea4dev.vanilla_source.command.HoverTextCommandExecutor;
@@ -19,12 +20,12 @@ import com.github.bea4dev.vanilla_source.impl.ImplVanillaSourceAPI;
 import com.github.bea4dev.vanilla_source.nms.NMSManager;
 import com.github.bea4dev.vanilla_source.structure.ParallelStructure;
 import com.github.bea4dev.vanilla_source.structure.ImplStructureData;
+import com.ticxo.modelengine.api.ModelEngineAPI;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import com.github.bea4dev.vanilla_source.listener.ChunkListener;
 import com.github.bea4dev.vanilla_source.listener.TestListener;
-import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.logging.Logger;
 
@@ -125,17 +126,11 @@ public final class VanillaSource extends JavaPlugin {
                 EnginePlayer.getAllPlayers().forEach(EngineEntity::tick);
             }, 0, 1);
 
+            if (VSSettings.isOverrideModelEngineUpdater()) {
+                ModelEngineAPI.getAPI().getModelUpdaters().end();
+            }
+
             loadedSuccessfully = true;
-
-            new BukkitRunnable() {
-                private long prevNano = System.nanoTime();
-
-                public void run() {
-                    System.out.println(String.format("%.2f[ms]", ((double) (System.nanoTime() - prevNano)) / 1000000.0));
-
-                    prevNano = System.nanoTime();
-                }
-            }.runTaskTimer(VanillaSource.getPlugin(), 0, 1);
         } catch (Exception error) {
             error.printStackTrace();
 

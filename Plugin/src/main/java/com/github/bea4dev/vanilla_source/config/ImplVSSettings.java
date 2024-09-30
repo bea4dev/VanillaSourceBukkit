@@ -15,7 +15,7 @@ public class ImplVSSettings extends VSSettings {
         File file = new File("plugins/VanillaSource", "config.yml");
         file.getParentFile().mkdirs();
     
-        if(!file.exists()){
+        if (!file.exists()) {
             VanillaSource.getPlugin().saveResource("config.yml", false);
         }
     
@@ -27,6 +27,7 @@ public class ImplVSSettings extends VSSettings {
         if (yml.contains("entity-threads")) entityThreads = yml.getInt("entity-threads");
         if (yml.contains("chiyogami-parallel-bridge")) useChiyogamiParallelBridge = yml.getBoolean("chiyogami-parallel-bridge");
         if (yml.contains("system-language")) SystemLanguage.setLang(yml.getString("system-language"));
+        if (yml.contains("override-model-engine-updater")) overrideModelEngineUpdater = yml.getBoolean("override-model-engine-updater");
     }
     
 }
