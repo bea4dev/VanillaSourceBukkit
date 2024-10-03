@@ -214,10 +214,10 @@ public class TestListener implements Listener {
         VanillaSourceAPI api = VanillaSourceAPI.getInstance();
         INMSHandler nmsHandler = api.getNMSHandler();
 
-        ActiveModel activeModel = ModelEngineAPI.createActiveModel("normal_zombie_be");
-        activeModel.setScale(2.0);
+        ActiveModel activeModel = ModelEngineAPI.createActiveModel("phage_normal");
+        activeModel.setScale(1.0);
         var animationHandler = activeModel.getAnimationHandler();
-        animationHandler.playAnimation("attack", 0.3, 0.3, 1, true);
+        animationHandler.playAnimation("walk", 0.3, 0.3, 1, true);
 
         var location = player.getLocation();
         var modeledEntityHolder = new ModeledEntityHolder(location);
