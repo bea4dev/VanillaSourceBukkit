@@ -88,7 +88,13 @@ public class ImplEntityControllerArmorStand extends ArmorStand implements NMSArm
 
         if (isMetadataChanged) {
             isMetadataChanged = false;
-            player.sendPacket(new ClientboundSetEntityDataPacket(super.getId(), super.getEntityData().packDirty()));
+            var dirty = super.getEntityData().packDirty();
+            if (dirty != null) {
+                player.sendPacket(new ClientboundSetEntityDataPacket(
+                        super.getId(),
+                        dirty
+                ));
+            }
         }
     }
 

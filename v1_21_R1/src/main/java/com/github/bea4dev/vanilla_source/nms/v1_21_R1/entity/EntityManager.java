@@ -56,6 +56,12 @@ public class EntityManager {
                 controller.setPos(x, y, z);
                 return controller;
             }
+
+            case BLOCK_DISPLAY: {
+                var controller = new ImplEntityControllerBlockDisplay(worldServer);
+                controller.setPos(x, y, z);
+                return controller;
+            }
         }
         
         throw new IllegalArgumentException("Entity type " + type + " is not supported.");
