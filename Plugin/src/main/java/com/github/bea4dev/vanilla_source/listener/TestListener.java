@@ -22,13 +22,17 @@ import com.ticxo.modelengine.api.ModelEngineAPI;
 import com.ticxo.modelengine.api.entity.Dummy;
 import com.ticxo.modelengine.api.model.ActiveModel;
 import com.ticxo.modelengine.api.model.ModeledEntity;
+import com.ticxo.modelengine.api.model.render.DisplayRenderer;
 import org.bukkit.*;
 import org.bukkit.block.Block;
+import org.bukkit.entity.ArmorStand;
+import org.bukkit.entity.BlockDisplay;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.util.Transformation;
 import org.bukkit.util.Vector;
 import org.contan_lang.ContanModule;
 import com.mojang.authlib.GameProfile;
@@ -217,11 +221,15 @@ public class TestListener implements Listener {
         ActiveModel activeModel = ModelEngineAPI.createActiveModel("phage_normal");
         activeModel.setScale(1.0);
         var animationHandler = activeModel.getAnimationHandler();
-        animationHandler.playAnimation("walk", 0.3, 0.3, 1, true);
+        animationHandler.playAnimation("walk", 0.3, 0.3, 2.0, true);
 
         var location = player.getLocation();
         var modeledEntityHolder = new ModeledEntityHolder(location);
         modeledEntityHolder.getModeledEntity().addModel(activeModel, true);
+        var rotationController = modeledEntityHolder.getDummy().getBodyRotationController();
+
+        var bone = activeModel.getBone("block").orElseThrow();
+        bone.setModel(new ItemStack(Material.STONE));
 
         var thread = api.getTickThreadPool().getNextTickThread();
         var entity = new EngineEntity(
@@ -233,12 +241,16 @@ public class TestListener implements Listener {
             @Override
             public void tick() {
                 super.tick();
+                rotationController.setYBodyRot(super.yaw);
+                //blockDisplayEntity.tick();
                 var location = player.getLocation();
                 super.aiController.navigator.setNavigationGoal(new BlockPosition(location.getBlockX(), location.getBlockY(), location.getBlockZ()));
             }
         };
 
+        entity.getAIController().navigator.setPathfindingInterval(10);
         entity.setModeledEntityHolder(modeledEntityHolder);
+        ((ArmorStand) entity.getController().getBukkitEntity()).setInvisible(true);
         entity.spawn();
 
         /*

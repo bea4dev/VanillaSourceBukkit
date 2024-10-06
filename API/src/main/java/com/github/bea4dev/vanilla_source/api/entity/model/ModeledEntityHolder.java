@@ -29,6 +29,8 @@ public class ModeledEntityHolder {
         return modeledEntity;
     }
 
+    public Dummy<?> getDummy() { return dummy; }
+
     public void tick(EngineEntity entity) {
         var yawPitch = entity.getRotation();
         dummy.syncLocation(entity.getPosition().toLocation(world, yawPitch.x, yawPitch.y));
