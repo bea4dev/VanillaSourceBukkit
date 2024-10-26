@@ -1,7 +1,7 @@
-## VanillaSource
-Game engine system for minecraft.
+## VanillaSourceBukkit
+Multithreaded entity library for Bukkit
 
 ### Supported version
 ```
-1.15.2, 1.16.5
+1.21.1
 ```
