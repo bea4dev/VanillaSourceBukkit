@@ -4,7 +4,7 @@
   <artifactId>vanilla_source_api</artifactId>
   <packaging>jar</packaging>
   <version>0.0.3</version>
-  <groupId>thpmc</groupId>
+  <groupId>com.github.bea4dev</groupId>
 
   <distributionManagement>
     <repository>
@@ -88,7 +88,7 @@
               <relocations>
                 <relocation>
                   <pattern>net.wesjd.anvilgui</pattern>
-                  <shadedPattern>thpmc.vanilla_source.anvilgui</shadedPattern>
+                  <shadedPattern>com.github.bea4dev.vanilla_source.anvilgui</shadedPattern>
                 </relocation>
               </relocations>
               <minimizeJar>false</minimizeJar>
@@ -135,7 +135,7 @@
     <dependency>
       <groupId>org.spigotmc</groupId>
       <artifactId>spigot-api</artifactId>
-      <version>1.16.5-R0.1-SNAPSHOT</version>
+      <version>1.21.1-R0.1-SNAPSHOT</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
