@@ -6,6 +6,7 @@ import com.github.bea4dev.vanilla_source.api.entity.EngineEntity;
 import com.github.bea4dev.vanilla_source.api.entity.tick.MainThreadTimer;
 import com.github.bea4dev.vanilla_source.api.player.EnginePlayer;
 import com.github.bea4dev.vanilla_source.api.setting.VSSettings;
+import com.github.bea4dev.vanilla_source.api.text.TextBoxManager;
 import com.github.bea4dev.vanilla_source.camera.CameraFileManager;
 import com.github.bea4dev.vanilla_source.command.CommandRegistry;
 import com.github.bea4dev.vanilla_source.command.HoverTextCommandExecutor;
@@ -129,6 +130,8 @@ public final class VanillaSource extends JavaPlugin {
             if (VSSettings.isOverrideModelEngineUpdater()) {
                 ModelEngineAPI.getAPI().getModelUpdaters().end();
             }
+
+            TextBoxManager.init(this);
 
             loadedSuccessfully = true;
         } catch (Exception error) {

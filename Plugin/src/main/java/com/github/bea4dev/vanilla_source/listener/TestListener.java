@@ -12,6 +12,7 @@ import com.github.bea4dev.vanilla_source.api.entity.tick.TickThread;
 import com.github.bea4dev.vanilla_source.api.nms.INMSHandler;
 import com.github.bea4dev.vanilla_source.api.nms.entity.NMSEntityController;
 import com.github.bea4dev.vanilla_source.api.player.EnginePlayer;
+import com.github.bea4dev.vanilla_source.api.text.TextBox;
 import com.github.bea4dev.vanilla_source.api.util.collision.CollideOption;
 import com.github.bea4dev.vanilla_source.api.util.math.BezierCurve3D;
 import com.github.bea4dev.vanilla_source.api.util.math.EasingBezier2D;
@@ -214,7 +215,11 @@ public class TestListener implements Listener {
     public void onPlayerClick(PlayerAnimationEvent event) {
         Player player = event.getPlayer();
         if(!player.isSneaking()) return;
-    
+
+        var textBox = new TextBox(player, "\uE201", "タイトル", 1, "メッセージ: 1/nメッセージ: 2/nメッセージ: 3/n終わり！");
+        textBox.show();
+
+        /*
         VanillaSourceAPI api = VanillaSourceAPI.getInstance();
         INMSHandler nmsHandler = api.getNMSHandler();
 
@@ -251,7 +256,7 @@ public class TestListener implements Listener {
         entity.getAIController().navigator.setPathfindingInterval(10);
         entity.setModeledEntityHolder(modeledEntityHolder);
         ((ArmorStand) entity.getController().getBukkitEntity()).setInvisible(true);
-        entity.spawn();
+        entity.spawn();*/
 
         /*
         TickThread thread = api.getTickThreadPool().getNextTickThread();
