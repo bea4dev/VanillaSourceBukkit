@@ -9,10 +9,14 @@ import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 public class CameraFileManager {
+
+    private static final Set<String> loaded = new HashSet<>();
     
     public static void load() {
         VanillaSource.getPlugin().getLogger().info("Loading camera data...");
@@ -29,6 +33,9 @@ public class CameraFileManager {
             for (File file : files) {
                 YamlConfiguration yml = YamlConfiguration.loadConfiguration(file);
                 String name = file.getName().replace(".yml", "");
+
+                loaded.add(name);
+
                 switch (Objects.requireNonNull(yml.getString("type"))) {
                     case "curve": {
                         CameraPositionsManager.registerCameraPositions(name, new Bezier3DPositions(yml));
@@ -48,6 +55,10 @@ public class CameraFileManager {
         for (Map.Entry<String, CameraPositions> positionsEntry : CameraPositionsManager.getAllPositionEntry()) {
             String name = positionsEntry.getKey();
             CameraPositions positions = positionsEntry.getValue();
+
+            if (loaded.contains(name)) {
+                continue;
+            }
             
             YamlConfiguration yml = new YamlConfiguration();
             if (positions instanceof Bezier3DPositions) {

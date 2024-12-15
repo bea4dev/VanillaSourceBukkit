@@ -34,11 +34,10 @@ public class Bezier3DPositions implements CameraPositions {
         }
         this.bezier3DLengthSum = bezier3DLengthSum;
     }
-    
-    public Bezier3DPositions(YamlConfiguration yml) {load(yml);}
 
-
-    private double previous = 0.0;
+    public Bezier3DPositions(YamlConfiguration yml) {
+        load(yml);
+    }
 
     @Override
     public Vector getTickPosition(int tick) {
@@ -69,12 +68,12 @@ public class Bezier3DPositions implements CameraPositions {
 
         return currentBezier3D.getPosition(currentT / currentBezier3D.length);
     }
-    
+
     @Override
     public int getEndTick() {
         return endTick;
     }
-    
+
     @Override
     public void save(YamlConfiguration yml) {
         List<String> positionList = new ArrayList<>();
@@ -86,7 +85,7 @@ public class Bezier3DPositions implements CameraPositions {
         yml.set("end-tick", endTick);
         yml.set("length", bezier3DLengthSum);
     }
-    
+
     @Override
     public void load(YamlConfiguration yml) {
         List<String> positionList = yml.getStringList("positions");
@@ -97,7 +96,12 @@ public class Bezier3DPositions implements CameraPositions {
         endTick = yml.getInt("end-tick");
         bezier3DLengthSum = yml.getDouble("length");
         String[] easingArgs = Objects.requireNonNull(yml.getString("easing")).replace(" ", "").split(",");
-        easingBezier2D = new EasingBezier2D(Double.parseDouble(easingArgs[0]), Double.parseDouble(easingArgs[1]), Double.parseDouble(easingArgs[2]), Double.parseDouble(easingArgs[3]));
+        easingBezier2D = new EasingBezier2D(
+                Double.parseDouble(easingArgs[0]),
+                Double.parseDouble(easingArgs[1]),
+                Double.parseDouble(easingArgs[2]),
+                Double.parseDouble(easingArgs[3])
+        );
     }
-    
+
 }
