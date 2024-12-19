@@ -26,6 +26,7 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import org.bukkit.Bukkit;
+import org.bukkit.Chunk;
 import org.bukkit.craftbukkit.v1_21_R1.CraftChunk;
 import org.bukkit.craftbukkit.v1_21_R1.CraftParticle;
 import org.bukkit.craftbukkit.v1_21_R1.CraftServer;
@@ -452,7 +453,7 @@ public class NMSHandler implements INMSHandler {
     }
 
     public static void setRewritable(Field field) throws Exception {
-        if (field.isAccessible()) { return; }
+        if ((field.getModifiers() & (Modifier.PRIVATE | Modifier.FINAL)) == 0) { return; }
 
         field.setAccessible(true);
 
@@ -474,7 +475,7 @@ public class NMSHandler implements INMSHandler {
     @Override
     public void setBiomeSettings(String name, BiomeDataContainer container) {
         Biome biomeBase = (Biome) getNMSBiomeByKey("custom:" + name);
-        
+
         try {
             Biome.TemperatureModifier temperatureModifier = Biome.TemperatureModifier.NONE;
             switch (container.temperatureAttribute) {
@@ -486,15 +487,16 @@ public class NMSHandler implements INMSHandler {
                     break;
                 }
             }
+            /* Unfortunately, we cannot rewrite record fields...
             setValueReflection(biomeBase.climateSettings, "temperatureModifier", temperatureModifier);
             if (container.temperature != null) {
                 setValueReflection(biomeBase.climateSettings, "temperature", container.temperature);
-            }
-    
+            }*/
+
             BiomeSpecialEffects effects = biomeBase.getSpecialEffects();
 
             BiomeSpecialEffects.GrassColorModifier grassColorModifier = BiomeSpecialEffects.GrassColorModifier.NONE;
-            
+
             switch (container.grassColorAttribute) {
                 case NORMAL: {
                     break;
@@ -512,17 +514,17 @@ public class NMSHandler implements INMSHandler {
 
             setValueReflection(effects, "fogColor", container.fogColorRGB);
             setValueReflection(effects, "waterColor", container.waterColorRGB);
-            setValueReflection(effects, "waterFog", container.waterFogColorRGB);
+            setValueReflection(effects, "waterFogColor", container.waterFogColorRGB);
             setValueReflection(effects, "skyColor", container.skyColorRGB);
 
             if (container.foliageColorRGB != null) {
                 setValueReflection(effects, "foliageColorOverride", Optional.of(container.foliageColorRGB));
             }
-    
+
             if (container.grassBlockColorRGB != null) {
                 setValueReflection(effects, "grassColorOverride", Optional.of(container.grassBlockColorRGB));
             }
-    
+
             if (container.music != null) {
                 setValueReflection(
                         effects,
@@ -530,7 +532,7 @@ public class NMSHandler implements INMSHandler {
                         Optional.of(new Music(CraftSound.bukkitToMinecraftHolder(container.music), 0, 0, true))
                 );
             }
-    
+
             if (container.particle != null) {
                 Object particleData = container.particleData;
                 float particleAmount = container.particleAmount;
@@ -546,11 +548,26 @@ public class NMSHandler implements INMSHandler {
     
     @Override
     public void setBiomeForBlock(org.bukkit.block.Block block, Object biome) {
-        LevelChunk chunk = (LevelChunk) ((CraftChunk) block.getChunk()).getHandle(ChunkStatus.FULL);
+        LevelChunk chunk = (LevelChunk) ((CraftChunk) block.getChunk()).getHandle(ChunkStatus.BIOMES);
         if (chunk == null) { return; }
         chunk.setBiome(block.getX() >> 2, block.getY() >> 2, block.getZ() >> 2, Holder.direct((Biome) biome));
     }
-    
+
+    @Override
+    public void setBiomeForChunk(Chunk chunk, Object biome) {
+        LevelChunk nmsChunk = (LevelChunk) ((CraftChunk) chunk).getHandle(ChunkStatus.BIOMES);
+        var holder = Holder.direct((Biome) biome);
+        for (var section : nmsChunk.getSections()) {
+            for (var x = 0; x < 16; x++) {
+                for (var y = 0; y < 16; y++) {
+                    for (var z = 0; z < 16; z++) {
+                        section.setBiome(x, y, z, holder);
+                    }
+                }
+            }
+        }
+    }
+
     @Override
     public Object createSpawnEntityPacket(Object iEntity) {
         Entity entity = (Entity) iEntity;

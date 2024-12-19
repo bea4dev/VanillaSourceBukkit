@@ -9,6 +9,7 @@ import com.github.bea4dev.vanilla_source.api.world.cache.AsyncEngineChunk;
 import com.github.bea4dev.vanilla_source.api.world.cache.EngineWorld;
 import com.github.bea4dev.vanilla_source.api.world.parallel.ParallelChunk;
 import com.github.bea4dev.vanilla_source.api.world.parallel.ParallelWorld;
+import org.bukkit.Chunk;
 import org.bukkit.block.Block;
 import io.netty.channel.Channel;
 import org.bukkit.World;
@@ -105,5 +106,6 @@ public interface INMSHandler {
     void setBiomeSettings(String name, BiomeDataContainer container);
     
     void setBiomeForBlock(Block block, Object biome);
-    
+
+    void setBiomeForChunk(Chunk chunk, Object biome);
 }
