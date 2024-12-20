@@ -1,5 +1,6 @@
 package com.github.bea4dev.vanilla_source.nms.v1_21_R1;
 
+import com.github.bea4dev.vanilla_source.api.dimension.DimensionTypeContainer;
 import net.minecraft.core.*;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.Connection;
@@ -12,7 +13,11 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.ServerCommonPacketListenerImpl;
 import net.minecraft.server.network.ServerGamePacketListenerImpl;
 import net.minecraft.sounds.Music;
+import net.minecraft.tags.TagKey;
+import net.minecraft.util.valueproviders.ConstantInt;
+import net.minecraft.util.valueproviders.IntProvider;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.biome.AmbientParticleSettings;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.BiomeSpecialEffects;
@@ -21,16 +26,14 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.chunk.status.ChunkStatus;
+import net.minecraft.world.level.dimension.DimensionType;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
-import org.bukkit.craftbukkit.v1_21_R1.CraftChunk;
-import org.bukkit.craftbukkit.v1_21_R1.CraftParticle;
-import org.bukkit.craftbukkit.v1_21_R1.CraftServer;
-import org.bukkit.craftbukkit.v1_21_R1.CraftSound;
+import org.bukkit.craftbukkit.v1_21_R1.*;
 import org.bukkit.util.NumberConversions;
 import com.github.bea4dev.vanilla_source.api.biome.BiomeDataContainer;
 import com.github.bea4dev.vanilla_source.api.world.cache.AsyncEngineChunk;
@@ -70,7 +73,9 @@ public class NMSHandler implements INMSHandler {
         try {
             networkManagerField = ServerCommonPacketListenerImpl.class.getDeclaredField("connection");
             networkManagerField.setAccessible(true);
-        } catch (Exception e) { e.printStackTrace(); }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
 
@@ -84,34 +89,46 @@ public class NMSHandler implements INMSHandler {
             throw new IllegalStateException(e);
         }
     }
-    
+
     @Override
     public void sendPacket(Player player, Object packet) {
         ((CraftPlayer) player).getHandle().connection.sendPacket((Packet<?>) packet);
     }
-    
+
     @Override
     public Object getNMSPlayer(Player player) {
         return ((CraftPlayer) player).getHandle();
     }
-    
-    @Override
-    public Object getIBlockDataByCombinedId(int id) { return Block.stateById(id); }
 
     @Override
-    public int getCombinedIdByIBlockData(Object iBlockData) { return Block.getId((BlockState) iBlockData); }
+    public Object getIBlockDataByCombinedId(int id) {
+        return Block.stateById(id);
+    }
 
     @Override
-    public Object getIBlockData(BlockData blockData) { return ((CraftBlockData) blockData).getState(); }
+    public int getCombinedIdByIBlockData(Object iBlockData) {
+        return Block.getId((BlockState) iBlockData);
+    }
 
     @Override
-    public BlockData getBukkitBlockData(Object iBlockData) { return CraftBlockData.fromData((BlockState) iBlockData); }
+    public Object getIBlockData(BlockData blockData) {
+        return ((CraftBlockData) blockData).getState();
+    }
 
     @Override
-    public Object[] createIBlockDataArray(int length) { return new BlockState[length]; }
+    public BlockData getBukkitBlockData(Object iBlockData) {
+        return CraftBlockData.fromData((BlockState) iBlockData);
+    }
 
     @Override
-    public boolean isMapChunkPacket(Object packet) { return packet instanceof ClientboundLevelChunkWithLightPacket; }
+    public Object[] createIBlockDataArray(int length) {
+        return new BlockState[length];
+    }
+
+    @Override
+    public boolean isMapChunkPacket(Object packet) {
+        return packet instanceof ClientboundLevelChunkWithLightPacket;
+    }
 
     @Override
     public boolean isMultiBlockChangePacket(Object packet) {
@@ -119,31 +136,35 @@ public class NMSHandler implements INMSHandler {
     }
 
     @Override
-    public boolean isBlockChangePacket(Object packet) { return packet instanceof ClientboundBlockUpdatePacket; }
+    public boolean isBlockChangePacket(Object packet) {
+        return packet instanceof ClientboundBlockUpdatePacket;
+    }
 
     @Override
     public boolean isLightUpdatePacket(Object packet) {
         return packet instanceof ClientboundLightUpdatePacket || packet instanceof ClientboundLevelChunkWithLightPacket;
     }
-    
+
     @Override
-    public boolean isFlyPacket(Object packet) { return packet instanceof ServerboundMovePlayerPacket; }
-    
+    public boolean isFlyPacket(Object packet) {
+        return packet instanceof ServerboundMovePlayerPacket;
+    }
+
     @Override
     public @Nullable Object createBlockChangePacket(ParallelWorld parallelWorld, int blockX, int blockY, int blockZ) {
         return PacketManager.createBlockChangePacket(parallelWorld, blockX, blockY, blockZ);
     }
-    
+
     @Override
     public Set<Object> createMultiBlockChangePacket(ParallelWorld parallelWorld, Set<BlockPosition3i> blocks) {
         return PacketManager.createMultiBlockChangePacket(parallelWorld, blocks);
     }
-    
+
     @Override
     public void sendChunkMultiBlockChangeUpdatePacket(Player player, ParallelChunk parallelChunk) {
         PacketManager.sendChunkMultiBlockChangeUpdatePacket(player, parallelChunk, this);
     }
-    
+
     @Override
     public @Nullable Object createLightUpdatePacketAtPrimaryThread(ParallelChunk parallelChunk) {
         return PacketManager.createLightUpdatePacketAtPrimaryThread(parallelChunk);
@@ -153,7 +174,7 @@ public class NMSHandler implements INMSHandler {
     public void sendClearChunkMultiBlockChangePacketAtPrimaryThread(Player player, ParallelChunk parallelChunk) {
         PacketManager.sendClearChunkMultiBlockChangePacketAtPrimaryThread(player, parallelChunk, this);
     }
-    
+
     @Override
     public <T> NMSEntityController createNMSEntityController(World world, double x, double y, double z, EntityType type, @Nullable T data) {
         return EntityManager.createNMSEntityController(world, x, y, z, type, data);
@@ -164,20 +185,22 @@ public class NMSHandler implements INMSHandler {
         var packet = new ClientboundSetPassengersPacket((Entity) entity);
         try {
             setValueReflection(packet, "passengers", passengerIds);
-        } catch (Exception error) { error.printStackTrace(); }
+        } catch (Exception error) {
+            error.printStackTrace();
+        }
         return packet;
     }
-    
+
     @Override
     public void collectBlockCollisions(EngineBlock engineBlock, Collection<EngineBoundingBox> boundingBoxCollection, CollideOption collideOption) {
         BlockState iBlockData = ((BlockState) engineBlock.getNMSBlockData());
         List<AABB> alignedBBList;
-        
+
         int blockX = engineBlock.getX();
         int blockY = engineBlock.getY();
         int blockZ = engineBlock.getZ();
         BlockPos blockPosition = new BlockPos.MutableBlockPos(blockX, blockY, blockZ);
-        
+
         if (collideOption.isIgnorePassableBlocks()) {
             alignedBBList = iBlockData.getCollisionShape(null, blockPosition).toAabbs();
         } else {
@@ -199,7 +222,7 @@ public class NMSHandler implements INMSHandler {
                 }
             }
         }
-        
+
         for (AABB aabb : alignedBBList) {
             boundingBoxCollection.add(new EngineBlockBoundingBox(
                     aabb.minX + blockX,
@@ -212,22 +235,22 @@ public class NMSHandler implements INMSHandler {
             ));
         }
     }
-    
-    private VoxelShape getFluidVoxelShape(FluidState fluid, EngineBlock block){
+
+    private VoxelShape getFluidVoxelShape(FluidState fluid, EngineBlock block) {
         return fluid.getAmount() == 9 && checkUpperBlockHasFluid(fluid, block) ?
                 Shapes.block()
                 : Shapes.create(0.0D, 0.0D, 0.0D, 1.0D, getFluidHeight(fluid, block), 1.0D);
     }
-    
-    private float getFluidHeight(FluidState fluid, EngineBlock block){
+
+    private float getFluidHeight(FluidState fluid, EngineBlock block) {
         return checkUpperBlockHasFluid(fluid, block) ? 1.0F : fluid.getOwnHeight();
     }
-    
-    private boolean checkUpperBlockHasFluid(FluidState fluid, EngineBlock block){
+
+    private boolean checkUpperBlockHasFluid(FluidState fluid, EngineBlock block) {
         EngineWorld world = block.getWorld();
         BlockState upperBlockData = (BlockState) world.getNMSBlockData(block.getX(), block.getY() + 1, block.getZ());
-        if(upperBlockData == null) return false;
-        
+        if (upperBlockData == null) return false;
+
         return fluid.getType().isSame(upperBlockData.getFluidState().getType());
     }
 
@@ -252,17 +275,17 @@ public class NMSHandler implements INMSHandler {
         }
 
         FluidState fluid = iBlockData.getFluidState();
-        if(!fluid.isEmpty()) {
+        if (!fluid.isEmpty()) {
             switch (collideOption.getFluidCollisionMode()) {
                 case ALWAYS: {
-                    if(!getFluidVoxelShape(fluid, engineBlock).isEmpty()){
+                    if (!getFluidVoxelShape(fluid, engineBlock).isEmpty()) {
                         hasCollision = true;
                     }
                     break;
                 }
                 case SOURCE_ONLY: {
                     if (fluid.isSource()) {
-                        if(!getFluidVoxelShape(fluid, engineBlock).isEmpty()){
+                        if (!getFluidVoxelShape(fluid, engineBlock).isEmpty()) {
                             hasCollision = true;
                         }
                     }
@@ -273,39 +296,39 @@ public class NMSHandler implements INMSHandler {
 
         return hasCollision;
     }
-    
+
     @Override
     public void registerBlocksForNative() {
         // None
     }
-    
+
     @Override
     public void registerChunkForNative(String worldName, AsyncEngineChunk chunk) {
         // None
     }
-    
+
     @Override
     public float getBlockSpeedFactor(EngineWorld world, double x, double y, double z) {
         int blockX = NumberConversions.floor(x);
         int blockY = NumberConversions.floor(y);
         int blockZ = NumberConversions.floor(z);
-    
+
         BlockState iBlockData = (BlockState) world.getNMSBlockData(blockX, blockY, blockZ);
         if (iBlockData == null) {
             return 1.0F;
         }
-    
+
         Block block = iBlockData.getBlock();
         float factor = block.getSpeedFactor();
         if (block != Blocks.WATER && block != Blocks.BUBBLE_COLUMN) {
             if (factor == 1.0F) {
                 int downY = NumberConversions.floor(y - 0.5000001D);
                 BlockState halfDown = (BlockState) world.getNMSBlockData(blockX, downY, blockZ);
-            
+
                 if (halfDown == null) {
                     return 1.0F;
                 }
-            
+
                 return halfDown.getBlock().getSpeedFactor();
             } else {
                 return factor;
@@ -314,27 +337,25 @@ public class NMSHandler implements INMSHandler {
             return factor;
         }
     }
-    
+
     @Override
     public float getBlockFrictionFactor(BlockData blockData) {
         BlockState iBlockData = (BlockState) this.getIBlockData(blockData);
         return iBlockData.getBlock().getFriction();
     }
-    
+
     @Override
     public Object getNMSBiomeByKey(String key) {
         DedicatedServer dedicatedServer = ((CraftServer) Bukkit.getServer()).getServer();
-        Biome biomeBase;
         MappedRegistry<Biome> registryWritable = (MappedRegistry<Biome>) dedicatedServer.registryAccess().registry(Registries.BIOME).orElseThrow();
         ResourceKey<Biome> resourceKey = ResourceKey.create(Registries.BIOME, ResourceLocation.parse(key.toLowerCase()));
-        biomeBase = registryWritable.get(resourceKey);
-        return biomeBase;
+        return registryWritable.getHolder(resourceKey).orElse(null);
     }
-    
+
     @Override
     public void setDefaultBiomeData(BiomeDataContainer container) {
         DedicatedServer dedicatedServer = ((CraftServer) Bukkit.getServer()).getServer();
-    
+
         ResourceKey<Biome> oldKey = ResourceKey.create(Registries.BIOME, ResourceLocation.parse("minecraft:forest"));
         MappedRegistry<Biome> registryWritable = (MappedRegistry<Biome>) dedicatedServer.registryAccess().registry(Registries.BIOME).orElseThrow();
         Biome forestBiome = registryWritable.getOrThrow(oldKey);
@@ -345,13 +366,13 @@ public class NMSHandler implements INMSHandler {
         container.waterFogColorRGB = specialEffects.getWaterFogColor();
         container.skyColorRGB = specialEffects.getSkyColor();
     }
-    
+
     @Override
     public Object createBiome(String name, BiomeDataContainer container) {
         DedicatedServer dedicatedServer = ((CraftServer) Bukkit.getServer()).getServer();
-        
+
         ResourceKey<Biome> newKey = ResourceKey.create(Registries.BIOME, ResourceLocation.fromNamespaceAndPath("custom", name));
-    
+
         ResourceKey<Biome> oldKey = ResourceKey.create(Registries.BIOME, ResourceLocation.fromNamespaceAndPath("minecraft", "forest"));
         MappedRegistry<Biome> registryWritable = (MappedRegistry<Biome>) dedicatedServer.registryAccess().registry(Registries.BIOME).orElseThrow();
         Biome forestBiome = registryWritable.getOrThrow(oldKey);
@@ -366,7 +387,7 @@ public class NMSHandler implements INMSHandler {
         if (temperature != null) {
             builder.temperature(temperature);
         }
-        
+
         switch (container.temperatureAttribute) {
             case NORMAL: {
                 builder.temperatureAdjustment(Biome.TemperatureModifier.NONE);
@@ -377,9 +398,9 @@ public class NMSHandler implements INMSHandler {
                 break;
             }
         }
-    
+
         BiomeSpecialEffects.Builder effectBuilder = new BiomeSpecialEffects.Builder();
-        
+
         switch (container.grassColorAttribute) {
             case NORMAL: {
                 effectBuilder.grassColorModifier(BiomeSpecialEffects.GrassColorModifier.NONE);
@@ -394,27 +415,27 @@ public class NMSHandler implements INMSHandler {
                 break;
             }
         }
-        
+
         effectBuilder.fogColor(container.fogColorRGB);
         effectBuilder.waterColor(container.waterColorRGB);
         effectBuilder.waterFogColor(container.waterFogColorRGB);
         effectBuilder.skyColor(container.skyColorRGB);
-        
+
         if (container.foliageColorRGB != null) {
             effectBuilder.foliageColorOverride(container.foliageColorRGB);
         }
-        
+
         if (container.grassBlockColorRGB != null) {
             effectBuilder.grassColorOverride(container.grassBlockColorRGB);
         }
-        
+
         if (container.music != null) {
             //effectBuilder.ambientLoopSound(Holder.direct(CraftSound.bukkitToMinecraft(container.music)));
             effectBuilder.backgroundMusic(
                     new Music(Holder.direct(CraftSound.bukkitToMinecraft(container.music)), 0, 0, true)
             );
         }
-        
+
         if (container.particle != null) {
             Object particleData = container.particleData;
             float particleAmount = container.particleAmount;
@@ -424,7 +445,7 @@ public class NMSHandler implements INMSHandler {
                     particleAmount
             ));
         }
-    
+
         builder.specialEffects(effectBuilder.build());
 
         MappedRegistry<Biome> iRegistryWritable = (MappedRegistry<Biome>) dedicatedServer.registryAccess().registry(Registries.BIOME).orElseThrow();
@@ -438,22 +459,42 @@ public class NMSHandler implements INMSHandler {
         }
 
         Biome biome = builder.build();
-        iRegistryWritable.register(newKey, biome, RegistrationInfo.BUILT_IN);
+        var holder = iRegistryWritable.register(newKey, biome, RegistrationInfo.BUILT_IN);
 
-        // No such method error...why?
-        // iRegistryWritable.freeze();
-        
-        return biome;
+        try {
+            var method = MappedRegistry.class.getMethod("freeze");
+            method.invoke(registryWritable);
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
+        }
+
+        return holder;
+    }
+
+    private static Field searchDeclaredField(Class<?> clazz, String fieldName) {
+        while (clazz != null) {
+            try {
+                return clazz.getDeclaredField(fieldName);
+            } catch (Exception e) {
+                clazz = clazz.getSuperclass();
+            }
+        }
+        return null;
     }
 
     public static void setValueReflection(Object parent, String fieldName, Object value) throws Exception {
-        Field field = parent.getClass().getDeclaredField(fieldName);
+        Field field = searchDeclaredField(parent.getClass(), fieldName);
+        if (field == null) {
+            throw new NoSuchFieldException(fieldName);
+        }
         setRewritable(field);
         field.set(parent, value);
     }
 
     public static void setRewritable(Field field) throws Exception {
-        if ((field.getModifiers() & (Modifier.PRIVATE | Modifier.FINAL)) == 0) { return; }
+        if ((field.getModifiers() & (Modifier.PRIVATE | Modifier.FINAL)) == 0) {
+            return;
+        }
 
         field.setAccessible(true);
 
@@ -466,12 +507,14 @@ public class NMSHandler implements INMSHandler {
                 modifiersField = f;
             }
         }
-        if (modifiersField == null) { throw new IllegalStateException("No modifiers field found!"); }
+        if (modifiersField == null) {
+            throw new IllegalStateException("No modifiers field found!");
+        }
 
         modifiersField.setAccessible(true);
         modifiersField.setInt(field, field.getModifiers() & ~Modifier.PRIVATE & ~Modifier.FINAL);
     }
-    
+
     @Override
     public void setBiomeSettings(String name, BiomeDataContainer container) {
         Biome biomeBase = (Biome) getNMSBiomeByKey("custom:" + name);
@@ -543,28 +586,125 @@ public class NMSHandler implements INMSHandler {
                         Optional.of(new AmbientParticleSettings(CraftParticle.createParticleParam(container.particle, particleData), particleAmount))
                 );
             }
-        } catch (Exception e) { e.printStackTrace(); }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
-    
+
+    @SuppressWarnings("unchecked")
     @Override
     public void setBiomeForBlock(org.bukkit.block.Block block, Object biome) {
         LevelChunk chunk = (LevelChunk) ((CraftChunk) block.getChunk()).getHandle(ChunkStatus.BIOMES);
-        if (chunk == null) { return; }
-        chunk.setBiome(block.getX() >> 2, block.getY() >> 2, block.getZ() >> 2, Holder.direct((Biome) biome));
+        if (chunk == null) {
+            return;
+        }
+        chunk.setBiome(block.getX() >> 2, block.getY() >> 2, block.getZ() >> 2, (Holder<Biome>) biome);
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public void setBiomeForChunk(Chunk chunk, Object biome) {
         LevelChunk nmsChunk = (LevelChunk) ((CraftChunk) chunk).getHandle(ChunkStatus.BIOMES);
-        var holder = Holder.direct((Biome) biome);
+        var holder = (Holder<Biome>) biome;
         for (var section : nmsChunk.getSections()) {
             for (var x = 0; x < 16; x++) {
                 for (var y = 0; y < 16; y++) {
                     for (var z = 0; z < 16; z++) {
-                        section.setBiome(x, y, z, holder);
+                        section.setBiome(x >> 2, y >> 2, z >> 2, holder);
                     }
                 }
             }
+        }
+    }
+
+    @Override
+    public Object createDimensionType(String name, DimensionTypeContainer container) {
+        DedicatedServer dedicatedServer = ((CraftServer) Bukkit.getServer()).getServer();
+        MappedRegistry<DimensionType> registry = (MappedRegistry<DimensionType>) dedicatedServer.registryAccess().registry(Registries.DIMENSION_TYPE).orElseThrow();
+
+        ResourceKey<DimensionType> key = ResourceKey.create(Registries.DIMENSION_TYPE, ResourceLocation.fromNamespaceAndPath("custom", name));
+
+        TagKey<Block> infiniburn = null;
+        switch (container.infiniburn()) {
+            case OVERWORLD -> {
+                infiniburn = TagKey.create(Registries.BLOCK, ResourceLocation.parse("infiniburn_overworld"));
+            }
+            case THE_NETHER -> {
+                infiniburn = TagKey.create(Registries.BLOCK, ResourceLocation.parse("infiniburn_nether"));
+            }
+            case THE_END -> {
+                infiniburn = TagKey.create(Registries.BLOCK, ResourceLocation.parse("infiniburn_end"));
+            }
+        }
+
+        ResourceLocation effectsLocation = null;
+        switch (container.effects()) {
+            case OVERWORLD -> {
+                effectsLocation = ResourceLocation.parse("overworld");
+            }
+            case THE_NETHER -> {
+                effectsLocation = ResourceLocation.parse("the_nether");
+            }
+            case THE_END -> {
+                effectsLocation = ResourceLocation.parse("the_end");
+            }
+        }
+
+        DimensionType.MonsterSettings monsterSettings = new DimensionType.MonsterSettings(
+                container.monsterSettings().piglinSafe(),
+                container.monsterSettings().hasRaids(),
+                ConstantInt.of(container.monsterSettings().monsterSpawnBlockLightLimit()),
+                container.monsterSettings().monsterSpawnBlockLightLimit()
+        );
+
+        DimensionType dimensionType = new DimensionType(
+                container.fixedTime(),
+                container.hasSkyLight(),
+                container.hasCeiling(),
+                container.ultraWarm(),
+                container.natural(),
+                container.coordinateScale(),
+                container.bedWorks(),
+                container.respawnAnchorWorks(),
+                container.minY(),
+                container.height(),
+                container.logicalHeight(),
+                infiniburn,
+                effectsLocation,
+                container.ambientLight(),
+                monsterSettings
+        );
+
+        try {
+            Field frozen = MappedRegistry.class.getDeclaredField("frozen");
+            frozen.setAccessible(true);
+            frozen.set(registry, false);
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
+        }
+
+        var holder = registry.register(key, dimensionType, RegistrationInfo.BUILT_IN);
+
+        try {
+            var method = MappedRegistry.class.getMethod("freeze");
+            method.invoke(registry);
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
+        }
+
+        return holder;
+    }
+
+    @Override
+    public void setDimensionType(World world, Object dimensionType) {
+        Level level = ((CraftWorld) world).getHandle();
+        try {
+            setValueReflection(level, "dimensionTypeRegistration", dimensionType);
+        } catch (Exception e) {
+            for (Field field : Level.class.getDeclaredFields()) {
+                System.out.println(field.getName() + ": " + field.getType().getSimpleName());
+            }
+            throw new IllegalStateException(e);
         }
     }
 
@@ -573,18 +713,18 @@ public class NMSHandler implements INMSHandler {
         Entity entity = (Entity) iEntity;
         return new ClientboundAddEntityPacket(entity, 0, entity.blockPosition());
     }
-    
+
     @Override
     public Object createSpawnEntityLivingPacket(Object iEntityLiving) {
         return this.createSpawnEntityPacket(iEntityLiving);
     }
-    
+
     @Override
     public Object createMetadataPacket(Object iEntity) {
         Entity entity = (Entity) iEntity;
         return new ClientboundSetEntityDataPacket(entity.getId(), entity.getEntityData().packDirty());
     }
-    
+
     @Override
     public Object createPlayerInfoPacket(Object iEntityPlayer, WrappedPlayerInfoAction action) {
         ServerPlayer entityPlayer = (ServerPlayer) iEntityPlayer;
@@ -609,7 +749,7 @@ public class NMSHandler implements INMSHandler {
 
         return new ClientboundPlayerInfoUpdatePacket(nmsAction, entityPlayer);
     }
-    
+
     @Override
     public Object createTeleportPacket(Object iEntity) {
         return new ClientboundTeleportEntityPacket((Entity) iEntity);
@@ -627,7 +767,7 @@ public class NMSHandler implements INMSHandler {
         }
         return packet;
     }
-    
+
     @Override
     public Object createRelEntityMoveLookPacket(Object iEntity, double deltaX, double deltaY, double deltaZ, float yaw, float pitch) {
         return new ClientboundMoveEntityPacket.PosRot(
@@ -640,20 +780,20 @@ public class NMSHandler implements INMSHandler {
                 true
         );
     }
-    
+
     @Override
     public Object createHeadRotationPacket(Object iEntity, float yaw) {
         return new ClientboundRotateHeadPacket((Entity) iEntity, (byte) ((yaw * 256.0F) / 360.0F));
     }
-    
+
     @Override
     public Object createEntityDestroyPacket(Object iEntity) {
         return new ClientboundRemoveEntitiesPacket(((Entity) iEntity).getId());
     }
-    
+
     @Override
     public Object createCameraPacket(Object target) {
         return new ClientboundSetCameraPacket((Entity) target);
     }
-    
+
 }

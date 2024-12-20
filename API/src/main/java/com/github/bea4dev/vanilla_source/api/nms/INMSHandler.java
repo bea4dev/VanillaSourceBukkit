@@ -1,6 +1,7 @@
 package com.github.bea4dev.vanilla_source.api.nms;
 
 import com.github.bea4dev.vanilla_source.api.biome.BiomeDataContainer;
+import com.github.bea4dev.vanilla_source.api.dimension.DimensionTypeContainer;
 import com.github.bea4dev.vanilla_source.api.util.BlockPosition3i;
 import com.github.bea4dev.vanilla_source.api.util.collision.CollideOption;
 import com.github.bea4dev.vanilla_source.api.util.collision.EngineBoundingBox;
@@ -108,4 +109,8 @@ public interface INMSHandler {
     void setBiomeForBlock(Block block, Object biome);
 
     void setBiomeForChunk(Chunk chunk, Object biome);
+
+    Object createDimensionType(String name, DimensionTypeContainer container);
+
+    void setDimensionType(World world, Object dimensionType);
 }
