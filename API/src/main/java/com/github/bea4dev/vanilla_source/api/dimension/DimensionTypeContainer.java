@@ -47,7 +47,7 @@ public record DimensionTypeContainer(
         private boolean hasCeiling;
         private boolean ultraWarm;
         private boolean natural;
-        private double coordinateScale;
+        private double coordinateScale = 1.0;
         private boolean bedWorks;
         private boolean respawnAnchorWorks;
         private int minY = DEFAULT_MIN_Y;
