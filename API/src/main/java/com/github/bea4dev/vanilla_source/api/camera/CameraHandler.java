@@ -51,6 +51,8 @@ public class CameraHandler implements TickBase {
 
     private Vector lastLookAtPosition;
 
+    private Runnable endCallBack = () -> {};
+
 
     private boolean isShaking = true;
 
@@ -240,6 +242,10 @@ public class CameraHandler implements TickBase {
 
     public void shake(boolean isShaking) {
         this.isShaking = isShaking;
+    }
+
+    public void setEndCallBack(Runnable endCallBack) {
+        this.endCallBack = endCallBack;
     }
 
 
