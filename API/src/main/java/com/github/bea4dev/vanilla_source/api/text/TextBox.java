@@ -26,6 +26,27 @@ public class TextBox {
 
     private Runnable endCallBack = () -> {};
 
+    private net.kyori.adventure.sound.Sound higherSound = net.kyori.adventure.sound.Sound.sound(
+            Sound.BLOCK_NOTE_BLOCK_BIT,
+            net.kyori.adventure.sound.Sound.Source.NEUTRAL,
+            Float.MAX_VALUE,
+            1.15F
+    );
+    private net.kyori.adventure.sound.Sound lowerSound = net.kyori.adventure.sound.Sound.sound(
+            Sound.BLOCK_NOTE_BLOCK_BIT,
+            net.kyori.adventure.sound.Sound.Source.NEUTRAL,
+            Float.MAX_VALUE,
+            1.25F
+    );
+
+    public void setHigherSound(net.kyori.adventure.sound.Sound higherSound) {
+        this.higherSound = higherSound;
+    }
+
+    public void setLowerSound(net.kyori.adventure.sound.Sound lowerSound) {
+        this.lowerSound = lowerSound;
+    }
+
     private int tick = 0;
 
     public TextBox(Player player, String textBox, String title, int speed, String message) {
@@ -154,9 +175,9 @@ public class TextBox {
 
         if (!await && tick % 2 == 0) {
             if (new Random().nextInt(2) % 2 == 0) {
-                player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_BIT, 0.2F, 1.15F);
+                player.playSound(higherSound);
             } else {
-                player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_BIT, 0.2F, 1.25F);
+                player.playSound(lowerSound);
             }
         }
 

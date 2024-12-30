@@ -234,6 +234,36 @@ public class CameraHandler implements TickBase {
         return cameraFuture.getContanInstance();
     }
 
+    public void prepare() {
+        var cameraPosition = cameraPositions.getTickPosition(0);
+        var lookAtPosition = lookAtPositions.getTickPosition(0);
+
+        Vector direction = lookAtPosition.clone().subtract(cameraPosition.clone());
+        Location temp = new Location(null, cameraPosition.getX(), cameraPosition.getY(), cameraPosition.getZ());
+        temp.setDirection(direction);
+        Vec2f lookAtDirection = new Vec2f(temp.getYaw(), temp.getPitch());
+
+        INMSHandler nmsHandler = VanillaSourceAPI.getInstance().getNMSHandler();
+
+        NMSEntityController controller = nmsHandler.createNMSEntityController(
+                target.getBukkitPlayer().getWorld(),
+                cameraPosition.getX(),
+                cameraPosition.getY(),
+                cameraPosition.getZ(),
+                EntityType.BOAT,
+                null
+        );
+        controller.setRotation(lookAtDirection.x, lookAtDirection.y);
+
+        Object spawnPacket = nmsHandler.createSpawnEntityLivingPacket(controller);
+        nmsHandler.sendPacket(target.getBukkitPlayer(), spawnPacket);
+
+        var teleportPacket = nmsHandler.createTeleportPacket(controller);
+        nmsHandler.sendPacket(target.getBukkitPlayer(), teleportPacket);
+
+        this.entityController = controller;
+    }
+
     public ContanClassInstance setLookAtPositions(CameraPositions lookAtPositions) {
         this.lookAtTick = 0;
         this.lookAtPositions = lookAtPositions;
