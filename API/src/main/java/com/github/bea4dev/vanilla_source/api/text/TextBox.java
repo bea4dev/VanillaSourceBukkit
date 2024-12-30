@@ -24,6 +24,8 @@ public class TextBox {
     private int currentColumn = 0;
     private boolean await = false;
 
+    private Runnable endCallBack = () -> {};
+
     private int tick = 0;
 
     public TextBox(Player player, String textBox, String title, int speed, String message) {
@@ -116,6 +118,7 @@ public class TextBox {
         if (currentLine >= messages.size()) {
             player.sendActionBar(Component.empty());
             TextBoxManager.unregisterTextBox(player);
+            endCallBack.run();
             return;
         }
 
@@ -213,5 +216,9 @@ public class TextBox {
         } else {
             return 2;
         }
+    }
+
+    public void setEndCallBack(Runnable endCallBack) {
+        this.endCallBack = endCallBack;
     }
 }
