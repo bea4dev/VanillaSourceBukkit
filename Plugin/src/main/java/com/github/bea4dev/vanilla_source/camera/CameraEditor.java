@@ -91,6 +91,7 @@ public class CameraEditor {
                     .cancelLore(SystemLanguage.getText("ok-cancel-override-setting-cancel-lore"))
                     .onOK(() -> {
                         CameraPositionsManager.registerCameraPositions(name, positions);
+                        CameraFileManager.renewed(name);
 
                         playerSettingPositionMap.remove(player);
                         playerSettingRunnableMap.remove(player);

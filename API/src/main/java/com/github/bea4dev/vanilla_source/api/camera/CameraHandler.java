@@ -98,6 +98,8 @@ public class CameraHandler implements TickBase {
                 cameraPositions = null;
                 cameraFuture.complete(new JavaClassInstance(contanEngine, this));
                 endCallBack.run();
+                end();
+                return;
             }
         } else {
             cameraPosition = lastCameraPosition;

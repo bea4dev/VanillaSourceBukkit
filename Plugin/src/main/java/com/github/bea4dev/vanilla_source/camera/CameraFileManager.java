@@ -76,5 +76,9 @@ public class CameraFileManager {
             }
         }
     }
+
+    public static void renewed(String name) {
+        loaded.remove(name);
+    }
     
 }

@@ -20,7 +20,6 @@ import java.util.Collections;
 
 public class ImplEntityControllerBlockDisplay extends Display.BlockDisplay implements NMSEntityController {
     private final ServerEntity serverEntity;
-    private boolean isMetadataChanged = false;
 
     public ImplEntityControllerBlockDisplay(ServerLevel world) {
         super(EntityType.BLOCK_DISPLAY, world);
@@ -90,15 +89,9 @@ public class ImplEntityControllerBlockDisplay extends Display.BlockDisplay imple
             }
         }
 
-        if (isMetadataChanged) {
-            isMetadataChanged = false;
-            var dirty = super.getEntityData().packDirty();
-            if (dirty != null) {
-                player.sendPacket(new ClientboundSetEntityDataPacket(
-                        super.getId(),
-                        dirty
-                ));
-            }
+        var metadata = super.getEntityData().packDirty();
+        if (metadata != null) {
+            player.sendPacket(new ClientboundSetEntityDataPacket(super.getId(), metadata));
         }
     }
 
@@ -106,16 +99,14 @@ public class ImplEntityControllerBlockDisplay extends Display.BlockDisplay imple
     public void show(EngineEntity engineEntity, EnginePlayer player) {
         player.sendPacket(new ClientboundAddEntityPacket(this, this.serverEntity));
         player.sendPacket(new ClientboundTeleportEntityPacket(this));
-        player.sendPacket(new ClientboundSetEntityDataPacket(super.getId(), this.getEntityData().getNonDefaultValues()));
+        var metadata = super.getEntityData().getNonDefaultValues();
+        if (metadata != null) {
+            player.sendPacket(new ClientboundSetEntityDataPacket(super.getId(), metadata));
+        }
     }
 
     @Override
     public void hide(EngineEntity engineEntity, EnginePlayer player) {
         player.sendPacket(new ClientboundRemoveEntitiesPacket(super.getId()));
-    }
-
-    @Override
-    public void setMetadataChanged(boolean is) {
-        isMetadataChanged = is;
     }
 }

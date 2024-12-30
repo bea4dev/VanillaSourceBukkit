@@ -24,7 +24,7 @@ public class CameraPositionAt implements CameraPositions {
     
     @Override
     public int getEndTick() {
-        return 1;
+        return Integer.MAX_VALUE;
     }
     
     @Override

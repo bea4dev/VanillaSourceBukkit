@@ -31,7 +31,7 @@ public class OKCancelGUI {
                         okRunnable.run();
                     });
     
-            ArtButton C = new ArtButton(new ItemBuilder(Material.EMERALD_BLOCK).name(cancelText).lore(cancelLore).build())
+            ArtButton C = new ArtButton(new ItemBuilder(Material.REDSTONE_BLOCK).name(cancelText).lore(cancelLore).build())
                     .listener((event, menu) -> {
                         cancelRunnable.run();
                     });

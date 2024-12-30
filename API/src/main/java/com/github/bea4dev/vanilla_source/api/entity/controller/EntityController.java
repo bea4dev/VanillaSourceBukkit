@@ -77,10 +77,4 @@ public interface EntityController {
      */
     Entity getBukkitEntity();
 
-    /**
-     * Configure this entity to send metadata.
-     * @param is Whether to send metadata.
-     */
-    void setMetadataChanged(boolean is);
-
 }

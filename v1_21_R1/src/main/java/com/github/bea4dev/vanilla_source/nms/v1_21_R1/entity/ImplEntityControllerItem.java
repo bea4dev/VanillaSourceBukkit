@@ -65,9 +65,6 @@ public class ImplEntityControllerItem extends ItemEntity implements NMSItemEntit
         super.setBoundingBox(new AABB(boundingBox.getMinX(), boundingBox.getMinY(), boundingBox.getMinZ(), boundingBox.getMaxX(), boundingBox.getMaxY(), boundingBox.getMaxZ()));
     }
     
-    
-    private boolean isMetadataChanged = false;
-    
     @Override
     public void playTickResult(EngineEntity engineEntity, EnginePlayer player, boolean absolute) {
         if (absolute) {
@@ -82,25 +79,19 @@ public class ImplEntityControllerItem extends ItemEntity implements NMSItemEntit
             }
         }
 
-        if (isMetadataChanged) {
-            isMetadataChanged = false;
-            var dirty = super.getEntityData().packDirty();
-            if (dirty != null) {
-                player.sendPacket(new ClientboundSetEntityDataPacket(
-                        super.getId(),
-                        dirty
-                ));
-            }
+        var metadata = super.getEntityData().packDirty();
+        if (metadata != null) {
+            player.sendPacket(new ClientboundSetEntityDataPacket(super.getId(), metadata));
         }
     }
     
     @Override
     public void show(EngineEntity engineEntity, EnginePlayer player) {
         player.sendPacket(new ClientboundAddEntityPacket(this, this.serverEntity));
-        player.sendPacket(new ClientboundSetEntityDataPacket(
-                super.getId(),
-                super.getEntityData().getNonDefaultValues()
-        ));
+        var metadata = super.getEntityData().getNonDefaultValues();
+        if (metadata != null) {
+            player.sendPacket(new ClientboundSetEntityDataPacket(super.getId(), metadata));
+        }
     }
     
     @Override
@@ -109,14 +100,8 @@ public class ImplEntityControllerItem extends ItemEntity implements NMSItemEntit
     }
 
     @Override
-    public void setMetadataChanged(boolean is) {
-        isMetadataChanged = is;
-    }
-
-    @Override
     public void setItemStack(ItemStack itemStack) {
         super.setItem(CraftItemStack.asNMSCopy(itemStack));
-        isMetadataChanged = true;
     }
     
 }

@@ -5,6 +5,8 @@ import com.github.bea4dev.vanilla_source.nms.v1_21_R1.entity.dummy.EmptyPlayerCo
 import com.mojang.authlib.GameProfile;
 import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.network.protocol.game.*;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.server.*;
 import net.minecraft.server.level.ClientInformation;
 import net.minecraft.server.level.ServerEntity;
@@ -31,8 +33,6 @@ import java.util.List;
 public class ImplEntityControllerPlayer extends ServerPlayer implements NMSEntityControllerPlayer {
 
     private final ServerEntity serverEntity;
-
-    private boolean isMetadataChanged = false;
     
     public ImplEntityControllerPlayer(
             MinecraftServer minecraftserver,
@@ -66,6 +66,10 @@ public class ImplEntityControllerPlayer extends ServerPlayer implements NMSEntit
                 packet -> {},
                 Collections.emptySet()
         );
+
+        // full skin
+        var metadata = super.getEntityData();
+        metadata.set(new EntityDataAccessor<>(17, EntityDataSerializers.BYTE), (byte) 127);
     }
     
     @Override
@@ -124,15 +128,9 @@ public class ImplEntityControllerPlayer extends ServerPlayer implements NMSEntit
             }
         }
 
-        if (isMetadataChanged) {
-            isMetadataChanged = false;
-            var dirty = super.getEntityData().packDirty();
-            if (dirty != null) {
-                player.sendPacket(new ClientboundSetEntityDataPacket(
-                        super.getId(),
-                        dirty
-                ));
-            }
+        var metadata = super.getEntityData().packDirty();
+        if (metadata != null) {
+            player.sendPacket(new ClientboundSetEntityDataPacket(super.getId(), metadata));
         }
     }
     
@@ -141,10 +139,12 @@ public class ImplEntityControllerPlayer extends ServerPlayer implements NMSEntit
         player.sendPacket(new ClientboundPlayerInfoUpdatePacket(ClientboundPlayerInfoUpdatePacket.Action.ADD_PLAYER, this));
         player.sendPacket(new ClientboundAddEntityPacket(this, this.serverEntity));
         player.sendPacket(new ClientboundTeleportEntityPacket(this));
-        player.sendPacket(new ClientboundSetEntityDataPacket(
-                super.getId(),
-                this.getEntityData().getNonDefaultValues()
-        ));
+        player.sendPacket(new ClientboundRotateHeadPacket(this, (byte) ((super.getYRot() * 256.0F) / 360.0F)));
+        player.sendPacket(new ClientboundAnimatePacket(this, 0));
+        var metadata = super.getEntityData().getNonDefaultValues();
+        if (metadata != null) {
+            player.sendPacket(new ClientboundSetEntityDataPacket(super.getId(), metadata));
+        }
     }
     
     @Override
@@ -152,11 +152,5 @@ public class ImplEntityControllerPlayer extends ServerPlayer implements NMSEntit
         player.sendPacket(new ClientboundPlayerInfoRemovePacket(List.of(super.getUUID())));
         player.sendPacket(new ClientboundRemoveEntitiesPacket(super.getId()));
     }
-
-    @Override
-    public void setMetadataChanged(boolean is) {
-        isMetadataChanged = is;
-    }
-
 }
 
