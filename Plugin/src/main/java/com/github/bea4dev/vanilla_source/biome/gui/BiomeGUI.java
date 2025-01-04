@@ -273,22 +273,11 @@ public class BiomeGUI {
             TextInputButton N = new TextInputButton(new ItemBuilder(Material.MUSIC_DISC_13)
                     .name(SystemLanguage.getText("gui-change-environment-sound"))
                     .lore(SystemLanguage.getText("gui-current-selected",
-                            newContainer.music == null ? "NULL" : newContainer.music.getKey().toString()))
+                            newContainer.music == null ? "NULL" : newContainer.music))
                     .build(),
                     SystemLanguage.getText("gui-change-environment-sound"), SystemLanguage.getText("gui-input-sound-name"));
             N.onInput((p, text) -> {
-                try {
-                    newContainer.music = Sound.valueOf(text);
-                } catch (Exception e) {
-                    for (Sound sound : Sound.values()) {
-                        if (text.equals(sound.getKey().getNamespace())) {
-                            newContainer.music = sound;
-                            return null;
-                        }
-                    }
-                    player.sendMessage(SystemLanguage.getText("gui-sound-not-found", text));
-                    return "Not found.";
-                }
+                newContainer.music = text;
                 return null;
             });
     
