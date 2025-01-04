@@ -92,6 +92,7 @@ public final class VanillaSource extends JavaPlugin {
             pluginManager.registerEvents(new TestListener(), this);
             pluginManager.registerEvents(new CameraPositionSettingListener(), this);
             pluginManager.registerEvents(new PlayerClickListener(), this);
+            pluginManager.registerEvents(new WorldListener(), this);
 
 
             //Register commands.

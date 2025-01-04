@@ -7,11 +7,14 @@ import com.github.bea4dev.vanilla_source.api.entity.tick.EntityTracker;
 import com.github.bea4dev.vanilla_source.api.entity.tick.TickThread;
 import com.github.bea4dev.vanilla_source.api.player.EnginePlayer;
 import com.github.bea4dev.vanilla_source.api.util.collision.*;
+import com.github.bea4dev.vanilla_source.api.world.BukkitWorldRegistry;
 import com.github.bea4dev.vanilla_source.api.world.cache.EngineChunk;
 import com.github.bea4dev.vanilla_source.api.world.cache.EngineWorld;
 import com.github.bea4dev.vanilla_source.api.world.cache.local.ThreadLocalCache;
 import com.github.bea4dev.vanilla_source.api.world.parallel.ParallelUniverse;
 import com.github.bea4dev.vanilla_source.api.world.parallel.ParallelWorld;
+import com.ticxo.modelengine.api.ModelEngineAPI;
+import com.ticxo.modelengine.api.animation.handler.AnimationHandler;
 import org.bukkit.FluidCollisionMode;
 import org.bukkit.Location;
 import org.bukkit.block.data.BlockData;
@@ -844,5 +847,30 @@ public class EngineEntity implements TickBase {
 
     public void setModeledEntityHolder(ModeledEntityHolder modeledEntityHolder) {
         this.modeledEntityHolder = modeledEntityHolder;
+    }
+
+    public void setModel(String modelName) {
+        var activeModel = ModelEngineAPI.createActiveModel(modelName);
+        var world = BukkitWorldRegistry.getWorld(this.getWorld().getName());
+        var location = new Location(world, x, y, z);
+
+        var modeledEntityHolder = new ModeledEntityHolder(location);
+        modeledEntityHolder.getModeledEntity().addModel(activeModel, true);
+
+        this.modeledEntityHolder = modeledEntityHolder;
+    }
+
+    public AnimationHandler getAnimationHandler() {
+        var modeledEntityHolder = this.modeledEntityHolder;
+        if (modeledEntityHolder == null) {
+            return null;
+        }
+
+        var activeModelIterator = modeledEntityHolder.getModeledEntity().getModels().values().iterator();
+        if (!activeModelIterator.hasNext()) {
+            return null;
+        }
+
+        return activeModelIterator.next().getAnimationHandler();
     }
 }
