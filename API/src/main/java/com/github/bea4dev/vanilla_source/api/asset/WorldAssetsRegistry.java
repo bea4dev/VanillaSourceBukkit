@@ -34,7 +34,13 @@ public class WorldAssetsRegistry {
         assetsMap.put(name, asset);
     }
 
+    @SuppressWarnings("ResultOfMethodCallIgnored")
     public static boolean unregisterAsset(String name) {
+        var file = new File("plugins/VanillaSource/assets/" + name + ".yml");
+        if (file.exists()) {
+            file.delete();
+        }
+
         var asset = assetsMap.remove(name);
         if (asset != null) {
             if (asset.entity != null) {

@@ -1,7 +1,6 @@
 package com.github.bea4dev.vanilla_source.api.asset;
 
 import com.github.bea4dev.vanilla_source.api.VanillaSourceAPI;
-import com.github.bea4dev.vanilla_source.api.entity.EngineEntity;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.block.data.BlockData;
@@ -57,7 +56,7 @@ public class WorldAsset {
 
         var bukkitEntity = (BlockDisplay) entity.getController().getBukkitEntity();
         var transformation = bukkitEntity.getTransformation();
-        var scale = endPosition.clone().subtract(startPosition);
+        var scale = endPosition.clone().subtract(startPosition).add(new Vector(1, 1, 1));
         transformation.getScale().set(scale.getX(), scale.getY(), scale.getZ());
         bukkitEntity.setTransformation(transformation);
 
