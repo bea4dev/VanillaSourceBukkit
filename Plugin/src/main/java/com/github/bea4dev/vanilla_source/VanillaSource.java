@@ -135,6 +135,10 @@ public final class VanillaSource extends JavaPlugin {
 
             TextBoxManager.init(this);
 
+            if (VSSettings.isDisableVanillaBGM()) {
+                api.getNMSHandler().disableVanillaBGM();
+            }
+
             loadedSuccessfully = true;
         } catch (Exception error) {
             error.printStackTrace();

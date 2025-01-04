@@ -11,34 +11,52 @@ public class NMSManager {
     private static String version;
 
     private static Class<?> getImplClass(String className)
-            throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException{
+            throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
         return Class.forName("com.github.bea4dev.vanilla_source.nms." + version + "." + className);
     }
 
-    public static String getVersion() {return version;}
+    public static String getVersion() {
+        return version;
+    }
 
 
     private static INMSHandler nmsHandler;
 
-    public static INMSHandler getNMSHandler() {return nmsHandler;}
-    
+    public static INMSHandler getNMSHandler() {
+        return nmsHandler;
+    }
+
 
     private static IPacketHandler mapChunkPacketHandler;
     private static IPacketHandler blockChangePacketHandler;
     private static IPacketHandler multiBlockChangePacketHandler;
     private static IPacketHandler lightUpdatePacketHandler;
     private static IPacketHandler flyPacketHandler;
+    private static IPacketHandler playerInputPacketHandler;
 
+    public static IPacketHandler getBlockChangePacketHandler() {
+        return blockChangePacketHandler;
+    }
 
-    public static IPacketHandler getBlockChangePacketHandler() {return blockChangePacketHandler;}
+    public static IPacketHandler getMapChunkPacketHandler() {
+        return mapChunkPacketHandler;
+    }
 
-    public static IPacketHandler getMapChunkPacketHandler() {return mapChunkPacketHandler;}
+    public static IPacketHandler getFlyPacketHandler() {
+        return flyPacketHandler;
+    }
 
-    public static IPacketHandler getFlyPacketHandler() {return flyPacketHandler;}
+    public static IPacketHandler getMultiBlockChangePacketHandler() {
+        return multiBlockChangePacketHandler;
+    }
 
-    public static IPacketHandler getMultiBlockChangePacketHandler() {return multiBlockChangePacketHandler;}
+    public static IPacketHandler getLightUpdatePacketHandler() {
+        return lightUpdatePacketHandler;
+    }
 
-    public static IPacketHandler getLightUpdatePacketHandler() {return lightUpdatePacketHandler;}
+    public static IPacketHandler getPlayerInputPacketHandler() {
+        return playerInputPacketHandler;
+    }
 
 
     public static void setup() {
@@ -59,19 +77,20 @@ public class NMSManager {
             Class<?> MultiBlockChangePacketHandler = getImplClass("MultiBlockChangePacketHandler");
             Class<?> LightUpdatePacketHandler = getImplClass("LightUpdatePacketHandler");
             Class<?> FlyPacketHandler = getImplClass("FlyPacketHandler");
+            Class<?> PlayerInputPacketHandler = getImplClass("PlayerInputPacketHandler");
 
             mapChunkPacketHandler = (IPacketHandler) MapChunkPacketHandler.getConstructor().newInstance();
             blockChangePacketHandler = (IPacketHandler) BlockChangePacketHandler.getConstructor().newInstance();
             multiBlockChangePacketHandler = (IPacketHandler) MultiBlockChangePacketHandler.getConstructor().newInstance();
             lightUpdatePacketHandler = (IPacketHandler) LightUpdatePacketHandler.getConstructor().newInstance();
             flyPacketHandler = (IPacketHandler) FlyPacketHandler.getConstructor().newInstance();
-
+            playerInputPacketHandler = (IPacketHandler) PlayerInputPacketHandler.getConstructor().newInstance();
         } catch (
                 ClassNotFoundException
                 | NoSuchMethodException
                 | InvocationTargetException
                 | InstantiationException
-                | IllegalAccessException e){
+                | IllegalAccessException e) {
             e.printStackTrace();
 
             throw new IllegalStateException("This version is not supported!"

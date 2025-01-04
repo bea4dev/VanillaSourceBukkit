@@ -170,8 +170,20 @@ public class TickThread implements Runnable, ContanTickBasedThread {
         }
         
         //tick
-        tickOnlyEntities.forEach(TickBase::tick);
-        entities.forEach(TickBase::tick);
+        for (var tickBase : tickOnlyEntities) {
+            try {
+                tickBase.tick();
+            } catch (Throwable e) {
+                e.printStackTrace();
+            }
+        }
+        for (var tickBase : entities) {
+            try {
+                tickBase.tick();
+            } catch (Throwable e) {
+                e.printStackTrace();
+            }
+        }
     
         //Tracker
         for(EnginePlayer enginePlayer : EnginePlayer.getAllPlayers()){
@@ -296,8 +308,12 @@ public class TickThread implements Runnable, ContanTickBasedThread {
         }
 
         @Override
-        protected void setException(Throwable t) {
-            t.printStackTrace();
+        protected void done() {
+            try {
+                if (!isCancelled()) get();
+            } catch (Throwable e) {
+                e.printStackTrace();
+            }
         }
 
     }

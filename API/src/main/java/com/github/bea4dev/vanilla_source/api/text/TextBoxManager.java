@@ -14,6 +14,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class TextBoxManager implements Listener, TickBase {
     private static final Map<Player, TextBox> textBoxes = new ConcurrentHashMap<>();
+    private static final Map<Player, Boolean> sneakMap = new ConcurrentHashMap<>();
 
     public static void init(Plugin plugin) {
         var instance = new TextBoxManager();
@@ -23,14 +24,34 @@ public class TextBoxManager implements Listener, TickBase {
         pluginManager.registerEvents(instance, plugin);
     }
 
+    public static void onSneak(Player player) {
+        var textBox = textBoxes.get(player);
+        if (textBox != null) {
+            textBox.next();
+        }
+    }
+
+    public static void onVehicleSneak(Player player, boolean pressDown) {
+        var isPressedDownPrev = sneakMap.get(player);
+
+        if (pressDown) {
+            if (isPressedDownPrev == null) {
+                onSneak(player);
+            } else {
+                if (!isPressedDownPrev) {
+                    onSneak(player);
+                }
+            }
+        }
+
+        sneakMap.put(player, pressDown);
+    }
+
     @EventHandler
     public void onPlayerSneak(PlayerToggleSneakEvent event) {
         var player = event.getPlayer();
         if (event.isSneaking()) {
-            var textBox = textBoxes.get(player);
-            if (textBox != null) {
-                textBox.next();
-            }
+            onSneak(player);
         }
     }
 
@@ -38,6 +59,7 @@ public class TextBoxManager implements Listener, TickBase {
     public void onPlayerQuit(PlayerQuitEvent event) {
         var player = event.getPlayer();
         textBoxes.remove(player);
+        sneakMap.remove(player);
     }
 
     static void registerTextBox(Player player, TextBox textBox) {

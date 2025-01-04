@@ -28,6 +28,7 @@ public class ImplVSSettings extends VSSettings {
         if (yml.contains("chiyogami-parallel-bridge")) useChiyogamiParallelBridge = yml.getBoolean("chiyogami-parallel-bridge");
         if (yml.contains("system-language")) SystemLanguage.setLang(yml.getString("system-language"));
         if (yml.contains("override-model-engine-updater")) overrideModelEngineUpdater = yml.getBoolean("override-model-engine-updater");
+        if (yml.contains("disable-vanilla-bgm")) disableVanillaBGM = yml.getBoolean("disable-vanilla-bgm");
     }
     
 }

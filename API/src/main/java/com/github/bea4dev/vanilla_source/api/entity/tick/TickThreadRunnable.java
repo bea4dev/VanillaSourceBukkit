@@ -41,7 +41,7 @@ public abstract class TickThreadRunnable implements Runnable {
                 if (task.isCanceled) {
                     cancel();
                 }
-                task.run();
+                tickThread.scheduleTask(TickThreadRunnable.this);
             }
         }.runTaskTimer(VanillaSourceAPI.getInstance().getPlugin(), delay, period);
     }

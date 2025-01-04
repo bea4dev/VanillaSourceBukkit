@@ -13,9 +13,9 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.ServerCommonPacketListenerImpl;
 import net.minecraft.server.network.ServerGamePacketListenerImpl;
 import net.minecraft.sounds.Music;
+import net.minecraft.sounds.SoundEvent;
 import net.minecraft.tags.TagKey;
 import net.minecraft.util.valueproviders.ConstantInt;
-import net.minecraft.util.valueproviders.IntProvider;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.biome.AmbientParticleSettings;
@@ -148,6 +148,11 @@ public class NMSHandler implements INMSHandler {
     @Override
     public boolean isFlyPacket(Object packet) {
         return packet instanceof ServerboundMovePlayerPacket;
+    }
+
+    @Override
+    public boolean isPlayerInputPacket(Object packet) {
+        return packet instanceof ServerboundPlayerInputPacket;
     }
 
     @Override
@@ -430,9 +435,9 @@ public class NMSHandler implements INMSHandler {
         }
 
         if (container.music != null) {
-            //effectBuilder.ambientLoopSound(Holder.direct(CraftSound.bukkitToMinecraft(container.music)));
+            var sound = Holder.direct(SoundEvent.createVariableRangeEvent(ResourceLocation.parse(container.music)));
             effectBuilder.backgroundMusic(
-                    new Music(Holder.direct(CraftSound.bukkitToMinecraft(container.music)), 0, 0, true)
+                    new Music(sound, 0, 0, true)
             );
         }
 
@@ -569,10 +574,11 @@ public class NMSHandler implements INMSHandler {
             }
 
             if (container.music != null) {
+                var sound = Holder.direct(SoundEvent.createVariableRangeEvent(ResourceLocation.parse(container.music)));
                 setValueReflection(
                         effects,
                         "backgroundMusic",
-                        Optional.of(new Music(CraftSound.bukkitToMinecraftHolder(container.music), 0, 0, true))
+                        Optional.of(new Music(sound, 0, 0, true))
                 );
             }
 
@@ -587,7 +593,7 @@ public class NMSHandler implements INMSHandler {
                 );
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
     }
 
@@ -613,6 +619,35 @@ public class NMSHandler implements INMSHandler {
                         section.setBiome(x >> 2, y >> 2, z >> 2, holder);
                     }
                 }
+            }
+        }
+    }
+
+    @Override
+    public void disableVanillaBGM() {
+        DedicatedServer dedicatedServer = ((CraftServer) Bukkit.getServer()).getServer();
+        MappedRegistry<Biome> registryWritable = (MappedRegistry<Biome>) dedicatedServer.registryAccess().registry(Registries.BIOME).orElseThrow();
+
+        var noneSoundKey = ResourceLocation.parse("minecraft:none");
+        var noneSound = Holder.direct(SoundEvent.createVariableRangeEvent(noneSoundKey));
+
+        for (var biome : org.bukkit.block.Biome.values()) {
+            if (biome == org.bukkit.block.Biome.CUSTOM) {
+                continue;
+            }
+
+            ResourceKey<Biome> key = ResourceKey.create(Registries.BIOME, ResourceLocation.parse(biome.getKey().toString()));
+            var nmsBiome = registryWritable.getOrThrow(key);
+            var effects = nmsBiome.getSpecialEffects();
+
+            try {
+                setValueReflection(
+                        effects,
+                        "backgroundMusic",
+                        Optional.of(new Music(noneSound, 0, 0, true))
+                );
+            } catch (Exception e) {
+                throw new RuntimeException(e);
             }
         }
     }

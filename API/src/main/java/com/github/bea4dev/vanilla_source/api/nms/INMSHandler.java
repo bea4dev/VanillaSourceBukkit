@@ -51,6 +51,8 @@ public interface INMSHandler {
     boolean isLightUpdatePacket(Object packet);
     
     boolean isFlyPacket(Object packet);
+
+    boolean isPlayerInputPacket(Object packet);
     
     @Nullable Object createBlockChangePacket(ParallelWorld parallelWorld, int blockX, int blockY, int blockZ);
     
@@ -109,6 +111,8 @@ public interface INMSHandler {
     void setBiomeForBlock(Block block, Object biome);
 
     void setBiomeForChunk(Chunk chunk, Object biome);
+
+    void disableVanillaBGM();
 
     Object createDimensionType(String name, DimensionTypeContainer container);
 

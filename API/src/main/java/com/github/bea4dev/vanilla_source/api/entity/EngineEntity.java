@@ -194,6 +194,13 @@ public class EngineEntity implements TickBase {
                 entities.remove(this);
             }
         }
+
+        tickThread.scheduleTask(() -> {
+            var modeledEntityHolder = this.modeledEntityHolder;
+            if (modeledEntityHolder != null) {
+                modeledEntityHolder.getModeledEntity().destroy();
+            }
+        });
     }
 
     /**

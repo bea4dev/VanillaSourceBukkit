@@ -21,7 +21,7 @@ public class BiomeDataContainer {
     
     public Integer grassBlockColorRGB = null;
     
-    public Sound music = null;
+    public String music = null;
     
     public Particle particle = null;
     

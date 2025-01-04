@@ -15,3 +15,4 @@ rewrite-light-packet: true
 chiyogami-parallel-bridge: true
 
 override-model-engine-updater: false
+disable-vanilla-bgm: false

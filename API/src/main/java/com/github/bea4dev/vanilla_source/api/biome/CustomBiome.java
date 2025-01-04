@@ -43,7 +43,7 @@ public class CustomBiome extends BiomeSource {
             container.grassBlockColorRGB = Integer.parseInt(Objects.requireNonNull(yml.getString("grass-block-color")).replace("#", ""), 16);
         }
         if (yml.contains("environment-sound")) {
-            container.music = Sound.valueOf(yml.getString("environment-sound"));
+            container.music = yml.getString("environment-sound");
         }
         if (yml.contains("particle-type")) {
             container.particle = Particle.valueOf(yml.getString("particle-type"));
