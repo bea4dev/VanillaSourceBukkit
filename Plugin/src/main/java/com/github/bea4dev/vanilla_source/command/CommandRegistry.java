@@ -9,6 +9,7 @@ public class CommandRegistry {
     public static void onLoad(JavaPlugin plugin) {
         CommandAPI.onLoad(new CommandAPIBukkitConfig(plugin).verboseOutput(true));
 
+        AssetCommand.register();
         CameraCommand.register();
         ContanCommand.register();
         BiomeCommand.register();

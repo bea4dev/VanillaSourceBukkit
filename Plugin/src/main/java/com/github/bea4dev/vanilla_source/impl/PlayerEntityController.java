@@ -88,9 +88,4 @@ public class PlayerEntityController implements EntityController {
         return player;
     }
 
-    @Override
-    public void setMetadataChanged(boolean is) {
-        //Ignore
-    }
-
 }

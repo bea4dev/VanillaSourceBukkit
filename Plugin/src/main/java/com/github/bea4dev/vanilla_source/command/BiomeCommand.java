@@ -24,7 +24,7 @@ public class BiomeCommand {
                                     BiomeManager.setBiome(sender);
                                 })
                 )
-                .withPermission("vanilla_source.camera")
+                .withPermission("vanilla_source.biome")
                 .register();
     }
 }

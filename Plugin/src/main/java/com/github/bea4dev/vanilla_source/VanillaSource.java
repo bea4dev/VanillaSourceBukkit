@@ -1,6 +1,7 @@
 package com.github.bea4dev.vanilla_source;
 
 import be4rjp.artgui.ArtGUI;
+import com.github.bea4dev.vanilla_source.api.asset.WorldAssetsRegistry;
 import com.github.bea4dev.vanilla_source.api.biome.BiomeStore;
 import com.github.bea4dev.vanilla_source.api.entity.EngineEntity;
 import com.github.bea4dev.vanilla_source.api.entity.tick.MainThreadTimer;
@@ -13,8 +14,7 @@ import com.github.bea4dev.vanilla_source.command.HoverTextCommandExecutor;
 import com.github.bea4dev.vanilla_source.config.ImplVSSettings;
 import com.github.bea4dev.vanilla_source.contan.ContanManager;
 import com.github.bea4dev.vanilla_source.lang.SystemLanguage;
-import com.github.bea4dev.vanilla_source.listener.CameraPositionSettingListener;
-import com.github.bea4dev.vanilla_source.listener.PlayerJoinQuitListener;
+import com.github.bea4dev.vanilla_source.listener.*;
 import com.github.bea4dev.vanilla_source.command.ParallelCommandExecutor;
 import com.github.bea4dev.vanilla_source.util.TaskHandler;
 import com.github.bea4dev.vanilla_source.impl.ImplVanillaSourceAPI;
@@ -25,8 +25,6 @@ import com.ticxo.modelengine.api.ModelEngineAPI;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
-import com.github.bea4dev.vanilla_source.listener.ChunkListener;
-import com.github.bea4dev.vanilla_source.listener.TestListener;
 
 import java.util.logging.Logger;
 
@@ -93,6 +91,7 @@ public final class VanillaSource extends JavaPlugin {
             pluginManager.registerEvents(new ChunkListener(), this);
             pluginManager.registerEvents(new TestListener(), this);
             pluginManager.registerEvents(new CameraPositionSettingListener(), this);
+            pluginManager.registerEvents(new PlayerClickListener(), this);
 
 
             //Register commands.
@@ -110,6 +109,8 @@ public final class VanillaSource extends JavaPlugin {
 
             ImplStructureData.loadAllStructureData();
             ParallelStructure.loadAllParallelStructure();
+
+            WorldAssetsRegistry.init();
 
             //Load all Contan script
             try {
@@ -156,6 +157,8 @@ public final class VanillaSource extends JavaPlugin {
         BiomeStore.saveCustomBiomes();
         
         CameraFileManager.save();
+
+        WorldAssetsRegistry.save();
 
         CommandRegistry.onDisable();
     }
