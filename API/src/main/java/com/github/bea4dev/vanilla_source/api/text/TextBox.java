@@ -217,9 +217,9 @@ public class TextBox {
             cursor = '▼';
         }
 
-        var component = Component.translatable("space.230").font(Key.key("space"))
+        var component = Component.translatable("space.230").font(Key.key("space:default"))
                 .append(Component.text(textBox).font(Key.key("default")))
-                .append(Component.translatable("space.-255").font(Key.key("space")))
+                .append(Component.translatable("space.-255").font(Key.key("space:default")))
                 .append(Component.text(builder.toString()).font(Key.key("text_0")))
                 .append(Component.text(first).font(Key.key("text_1")))
                 .append(Component.text(second).font(Key.key("text_2")))

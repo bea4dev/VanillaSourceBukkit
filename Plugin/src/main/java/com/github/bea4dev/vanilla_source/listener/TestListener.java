@@ -216,8 +216,8 @@ public class TestListener implements Listener {
         Player player = event.getPlayer();
         if(!player.isSneaking()) return;
 
-        //var textBox = new TextBox(player, "\uE201", "タイトル", 1, "メッセージ: 1/nメッセージ: 2/nメッセージ: 3/n終わり！");
-        //textBox.show();
+        var textBox = new TextBox(player, "\uE201", "タイトル", 1, "メッセージ: 1/nメッセージ: 2/nメッセージ: 3/n終わり！");
+        textBox.show();
 
         /*
         VanillaSourceAPI api = VanillaSourceAPI.getInstance();
