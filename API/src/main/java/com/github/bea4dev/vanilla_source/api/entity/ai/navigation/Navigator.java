@@ -40,7 +40,6 @@ public class Navigator {
 
     private int currentPathIndex = 0;
 
-    //Interval at which pathfinding is performed
     private int pathfindingInterval = 40;
 
     public int maxIterations = 50;
@@ -52,6 +51,8 @@ public class Navigator {
     private boolean asyncPathfinding = false;
 
     private boolean avoidEntityCollision = false;
+
+    public boolean enableNavigation = true;
 
     /**
      * Create Navigator instance.
@@ -115,10 +116,11 @@ public class Navigator {
             tickSyncTask = null;
         }
 
-        //Update pathfinding
-        if (!entity.isOnGround()) {
+        if (!entity.isOnGround() || !enableNavigation) {
             return;
         }
+
+        //Update pathfinding
         if (tick % pathfindingInterval == 0) {
             if (pathfindingTask == null) {
                 updatePathfinding(NumberConversions.floor(locX), NumberConversions.floor(locY), NumberConversions.floor(locZ));
