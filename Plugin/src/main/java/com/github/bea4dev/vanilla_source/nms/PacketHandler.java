@@ -1,10 +1,10 @@
 package com.github.bea4dev.vanilla_source.nms;
 
+import com.github.bea4dev.vanilla_source.api.packet.PacketListener;
 import com.github.bea4dev.vanilla_source.config.ImplVSSettings;
 import com.github.bea4dev.vanilla_source.api.nms.INMSHandler;
 import com.github.bea4dev.vanilla_source.api.player.EnginePlayer;
 import io.netty.channel.*;
-
 
 public class PacketHandler extends ChannelDuplexHandler {
 
@@ -28,7 +28,7 @@ public class PacketHandler extends ChannelDuplexHandler {
             super.channelRead(channelHandlerContext, NMSManager.getPlayerInputPacketHandler().rewrite(packet, enginePlayer, ImplVSSettings.isUseCachedChunkPacket()));
         }
 
-        super.channelRead(channelHandlerContext, packet);
+        super.channelRead(channelHandlerContext, PacketListener.onPacketReceived(enginePlayer.getBukkitPlayer(), packet));
     }
 
     @Override
@@ -55,7 +55,7 @@ public class PacketHandler extends ChannelDuplexHandler {
             return;
         }
 
-        super.write(channelHandlerContext, packet, channelPromise);
+        super.write(channelHandlerContext, PacketListener.onPacketSend(enginePlayer.getBukkitPlayer(), packet), channelPromise);
     }
 
 }

@@ -213,11 +213,12 @@ public class TestListener implements Listener {
     
     @EventHandler
     public void onPlayerClick(PlayerAnimationEvent event) {
+        /*
         Player player = event.getPlayer();
         if(!player.isSneaking()) return;
 
         var textBox = new TextBox(player, "\uE201", "タイトル", 1, "メッセージ: 1/nメッセージ: 2/nメッセージ: 3/n終わり！");
-        textBox.show();
+        textBox.show();*/
 
         /*
         VanillaSourceAPI api = VanillaSourceAPI.getInstance();
