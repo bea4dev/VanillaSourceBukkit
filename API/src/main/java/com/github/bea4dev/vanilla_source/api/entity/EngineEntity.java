@@ -788,6 +788,13 @@ public class EngineEntity implements TickBase {
 
     public void spawn() {
         tickThread.addEntity(this);
+
+        // add into chunk
+        var y = NumberConversions.floor(this.y);
+        if (ChunkUtil.isInRangeHeight(y)) {
+            var entities = chunk.getEntitiesInSection(ChunkUtil.getSectionIndexAligned(y));
+            entities.add(this);
+        }
     }
 
     /**
