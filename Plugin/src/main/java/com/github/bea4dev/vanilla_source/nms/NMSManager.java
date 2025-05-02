@@ -1,10 +1,12 @@
 package com.github.bea4dev.vanilla_source.nms;
 
+import com.github.bea4dev.vanilla_source.VanillaSource;
 import org.bukkit.Bukkit;
 import com.github.bea4dev.vanilla_source.api.nms.INMSHandler;
 import com.github.bea4dev.vanilla_source.api.nms.IPacketHandler;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.logging.Level;
 
 public class NMSManager {
 
@@ -60,9 +62,11 @@ public class NMSManager {
 
 
     public static void setup() {
-        String versionName = Bukkit.getServer().getVersion();
-        if (Integer.parseInt(versionName.split("\\.")[1]) == 21) {
+        String versionName = Bukkit.getServer().getMinecraftVersion();
+        if (versionName.equals("1.21.1")) {
             version = "v1_21_R1";
+        } else if (versionName.equals("1.21.5")) {
+            version = "v1_21_R4";
         } else {
             throw new IllegalStateException("This version is not supported!"
                     + System.lineSeparator() + "Server version : " + versionName);
