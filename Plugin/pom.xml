@@ -184,5 +184,11 @@
             <version>R4.0.7</version>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>com.github.bea4dev</groupId>
+            <artifactId>ArtGUI</artifactId>
+            <version>215171490c</version>
+            <scope>compile</scope>
+        </dependency>
     </dependencies>
 </project>

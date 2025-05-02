@@ -1,8 +1,8 @@
 package com.github.bea4dev.vanilla_source.api.util.gui;
 
-import be4rjp.artgui.button.ArtButton;
-import be4rjp.artgui.menu.HistoryData;
-import be4rjp.artgui.menu.MenuHistory;
+import com.github.bea4dev.artgui.button.ArtButton;
+import com.github.bea4dev.artgui.menu.HistoryData;
+import com.github.bea4dev.artgui.menu.MenuHistory;
 import net.wesjd.anvilgui.AnvilGUI;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;

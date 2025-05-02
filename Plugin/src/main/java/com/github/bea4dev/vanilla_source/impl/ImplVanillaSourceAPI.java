@@ -1,7 +1,6 @@
 package com.github.bea4dev.vanilla_source.impl;
 
-import be4rjp.artgui.ArtGUI;
-import com.github.bea4dev.vanilla_source.nms.NMSManager;
+import com.github.bea4dev.artgui.ArtGUI;
 import org.bukkit.plugin.java.JavaPlugin;
 import com.github.bea4dev.vanilla_source.api.VanillaSourceAPI;
 import com.github.bea4dev.vanilla_source.api.world.parallel.ParallelUniverse;

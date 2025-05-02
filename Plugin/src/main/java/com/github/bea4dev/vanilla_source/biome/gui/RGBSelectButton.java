@@ -1,9 +1,9 @@
 package com.github.bea4dev.vanilla_source.biome.gui;
 
-import be4rjp.artgui.button.*;
-import be4rjp.artgui.frame.Artist;
-import be4rjp.artgui.menu.ArtMenu;
-import be4rjp.artgui.menu.HistoryData;
+import com.github.bea4dev.artgui.button.*;
+import com.github.bea4dev.artgui.frame.Artist;
+import com.github.bea4dev.artgui.menu.ArtMenu;
+import com.github.bea4dev.artgui.menu.HistoryData;
 import com.github.bea4dev.vanilla_source.VanillaSource;
 import com.github.bea4dev.vanilla_source.api.util.gui.TextInputButton;
 import com.github.bea4dev.vanilla_source.lang.SystemLanguage;

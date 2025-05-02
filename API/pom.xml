@@ -186,7 +186,7 @@
     <dependency>
       <groupId>com.github.bea4dev</groupId>
       <artifactId>ArtGUI</artifactId>
-      <version>c97620ebed</version>
+      <version>215171490c</version>
       <scope>compile</scope>
     </dependency>
     <dependency>

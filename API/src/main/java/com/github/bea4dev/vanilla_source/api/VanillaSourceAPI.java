@@ -1,6 +1,6 @@
 package com.github.bea4dev.vanilla_source.api;
 
-import be4rjp.artgui.ArtGUI;
+import com.github.bea4dev.artgui.ArtGUI;
 import com.github.bea4dev.vanilla_source.api.contan.ContanUtil;
 import com.github.bea4dev.vanilla_source.api.contan.MainTickThread;
 import com.github.bea4dev.vanilla_source.api.entity.tick.TickThreadPool;

@@ -1,6 +1,6 @@
 package com.github.bea4dev.vanilla_source;
 
-import be4rjp.artgui.ArtGUI;
+import com.github.bea4dev.artgui.ArtGUI;
 import com.github.bea4dev.vanilla_source.api.asset.WorldAssetsRegistry;
 import com.github.bea4dev.vanilla_source.api.biome.BiomeStore;
 import com.github.bea4dev.vanilla_source.api.entity.EngineEntity;

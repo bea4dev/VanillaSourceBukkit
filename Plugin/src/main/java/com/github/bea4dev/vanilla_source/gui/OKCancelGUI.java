@@ -1,8 +1,8 @@
 package com.github.bea4dev.vanilla_source.gui;
 
-import be4rjp.artgui.button.*;
-import be4rjp.artgui.frame.Artist;
-import be4rjp.artgui.menu.ArtMenu;
+import com.github.bea4dev.artgui.button.*;
+import com.github.bea4dev.artgui.frame.Artist;
+import com.github.bea4dev.artgui.menu.ArtMenu;
 import com.github.bea4dev.vanilla_source.VanillaSource;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
