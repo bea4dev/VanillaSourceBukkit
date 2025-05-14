@@ -53,6 +53,8 @@ public interface INMSHandler {
     boolean isFlyPacket(Object packet);
 
     boolean isPlayerInputPacket(Object packet);
+
+    boolean isWindowContentsPacket(Object packet);
     
     @Nullable Object createBlockChangePacket(ParallelWorld parallelWorld, int blockX, int blockY, int blockZ);
     

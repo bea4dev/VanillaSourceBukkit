@@ -1,19 +1,16 @@
 package com.github.bea4dev.vanilla_source.nms;
 
-import com.github.bea4dev.vanilla_source.VanillaSource;
 import org.bukkit.Bukkit;
 import com.github.bea4dev.vanilla_source.api.nms.INMSHandler;
 import com.github.bea4dev.vanilla_source.api.nms.IPacketHandler;
 
 import java.lang.reflect.InvocationTargetException;
-import java.util.logging.Level;
 
 public class NMSManager {
 
     private static String version;
 
-    private static Class<?> getImplClass(String className)
-            throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
+    private static Class<?> getImplClass(String className) throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
         return Class.forName("com.github.bea4dev.vanilla_source.nms." + version + "." + className);
     }
 
@@ -35,6 +32,7 @@ public class NMSManager {
     private static IPacketHandler lightUpdatePacketHandler;
     private static IPacketHandler flyPacketHandler;
     private static IPacketHandler playerInputPacketHandler;
+    private static IPacketHandler windowContentsPacketHandler;
 
     public static IPacketHandler getBlockChangePacketHandler() {
         return blockChangePacketHandler;
@@ -60,6 +58,10 @@ public class NMSManager {
         return playerInputPacketHandler;
     }
 
+    public static IPacketHandler getWindowContentsPacketHandler() {
+        return windowContentsPacketHandler;
+    }
+
 
     public static void setup() {
         String versionName = Bukkit.getServer().getMinecraftVersion();
@@ -68,8 +70,7 @@ public class NMSManager {
         } else if (versionName.equals("1.21.5")) {
             version = "v1_21_R4";
         } else {
-            throw new IllegalStateException("This version is not supported!"
-                    + System.lineSeparator() + "Server version : " + versionName);
+            throw new IllegalStateException("This version is not supported!" + System.lineSeparator() + "Server version : " + versionName);
         }
 
         try {
@@ -82,6 +83,7 @@ public class NMSManager {
             Class<?> LightUpdatePacketHandler = getImplClass("LightUpdatePacketHandler");
             Class<?> FlyPacketHandler = getImplClass("FlyPacketHandler");
             Class<?> PlayerInputPacketHandler = getImplClass("PlayerInputPacketHandler");
+            Class<?> WindowContentsPacketHandler = getImplClass("WindowContentsPacketHandler");
 
             mapChunkPacketHandler = (IPacketHandler) MapChunkPacketHandler.getConstructor().newInstance();
             blockChangePacketHandler = (IPacketHandler) BlockChangePacketHandler.getConstructor().newInstance();
@@ -89,16 +91,12 @@ public class NMSManager {
             lightUpdatePacketHandler = (IPacketHandler) LightUpdatePacketHandler.getConstructor().newInstance();
             flyPacketHandler = (IPacketHandler) FlyPacketHandler.getConstructor().newInstance();
             playerInputPacketHandler = (IPacketHandler) PlayerInputPacketHandler.getConstructor().newInstance();
-        } catch (
-                ClassNotFoundException
-                | NoSuchMethodException
-                | InvocationTargetException
-                | InstantiationException
-                | IllegalAccessException e) {
+            windowContentsPacketHandler = (IPacketHandler) WindowContentsPacketHandler.getConstructor().newInstance();
+        } catch (ClassNotFoundException | NoSuchMethodException | InvocationTargetException | InstantiationException |
+                 IllegalAccessException e) {
             e.printStackTrace();
 
-            throw new IllegalStateException("This version is not supported!"
-                    + System.lineSeparator() + "Server version : " + versionName);
+            throw new IllegalStateException("This version is not supported!" + System.lineSeparator() + "Server version : " + versionName);
         }
     }
 

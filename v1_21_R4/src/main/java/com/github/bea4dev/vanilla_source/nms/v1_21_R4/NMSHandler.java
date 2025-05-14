@@ -158,6 +158,11 @@ public class NMSHandler implements INMSHandler {
     }
 
     @Override
+    public boolean isWindowContentsPacket(Object packet) {
+        return packet instanceof ClientboundContainerSetContentPacket;
+    }
+
+    @Override
     public @Nullable Object createBlockChangePacket(ParallelWorld parallelWorld, int blockX, int blockY, int blockZ) {
         return PacketManager.createBlockChangePacket(parallelWorld, blockX, blockY, blockZ);
     }
