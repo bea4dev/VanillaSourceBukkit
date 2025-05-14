@@ -21,7 +21,7 @@ public class WindowContentsPacketHandler implements IPacketHandler {
 
             var index = 0;
             for (var item : items) {
-                items.set(index, translateItem(item.copy(), enginePlayer.getBukkitPlayer()));
+                items.set(index, translateItem(item, enginePlayer.getBukkitPlayer()));
                 index++;
             }
 
@@ -29,21 +29,21 @@ public class WindowContentsPacketHandler implements IPacketHandler {
                     windowContentsPacket.getContainerId(),
                     windowContentsPacket.getStateId(),
                     (NonNullList<ItemStack>) items,
-                    translateItem(windowContentsPacket.getCarriedItem().copy(), enginePlayer.getBukkitPlayer())
+                    translateItem(windowContentsPacket.getCarriedItem(), enginePlayer.getBukkitPlayer())
             );
         } else if (packet instanceof ClientboundContainerSetSlotPacket setSlotPacket) {
             return new ClientboundContainerSetSlotPacket(
                     setSlotPacket.getContainerId(),
                     setSlotPacket.getStateId(),
                     setSlotPacket.getSlot(),
-                    translateItem(setSlotPacket.getItem().copy(), enginePlayer.getBukkitPlayer())
+                    translateItem(setSlotPacket.getItem(), enginePlayer.getBukkitPlayer())
             );
         }
 
         return packet;
     }
 
-    private net.minecraft.world.item.ItemStack translateItem(net.minecraft.world.item.ItemStack item, Player player) {
+    private ItemStack translateItem(ItemStack item, Player player) {
         var itemStack = CraftItemStack.asBukkitCopy(item);
         var meta = itemStack.getItemMeta();
 
