@@ -13,11 +13,13 @@ import org.bukkit.event.world.ChunkLoadEvent;
 import org.bukkit.event.world.ChunkUnloadEvent;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class ChunkListener implements Listener {
 
-    private final List<Chunk> updateChunks = new ArrayList<>();
+    private final Set<Chunk> updateChunks = new HashSet<>();
 
     public ChunkListener() {
         Bukkit.getScheduler().runTaskTimer(VanillaSource.getPlugin(), () -> {
@@ -29,10 +31,12 @@ public class ChunkListener implements Listener {
     }
 
     private void registerUpdateChunk(Chunk chunk) {
-        if (updateChunks.contains(chunk)) {
-            return;
+        for (var x = chunk.getX() - 1; x <= chunk.getX() + 1; x++) {
+            for (var z = chunk.getZ() - 1; z <= chunk.getZ() + 1; z++) {
+                var newChunk = chunk.getWorld().getChunkAt(x, z);
+                updateChunks.add(newChunk);
+            }
         }
-        updateChunks.add(chunk);
     }
 
     @EventHandler
