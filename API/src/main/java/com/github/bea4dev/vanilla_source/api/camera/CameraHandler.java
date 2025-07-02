@@ -56,6 +56,8 @@ public class CameraHandler implements TickBase {
 
     private boolean isShaking = true;
 
+    private boolean autoEnd = true;
+
 
     private int tick = 0;
 
@@ -98,7 +100,9 @@ public class CameraHandler implements TickBase {
                 cameraPositions = null;
                 cameraFuture.complete(new JavaClassInstance(contanEngine, this));
                 endCallBack.run();
-                end();
+                if (autoEnd) {
+                    end();
+                }
                 return;
             }
         } else {
@@ -136,6 +140,14 @@ public class CameraHandler implements TickBase {
 
             lookAtTick++;
         }
+
+        if (this.isShaking) {
+            var random = new Random();
+            lookAtPosition.add(
+                    new Vector(random.nextDouble(1.0) - 0.5, random.nextDouble(1.0) - 0.5, random.nextDouble(1.0) - 0.5)
+            );
+        }
+
         lastLookAtPosition = lookAtPosition;
 
         //end
@@ -279,6 +291,10 @@ public class CameraHandler implements TickBase {
 
     public void setEndCallBack(Runnable endCallBack) {
         this.endCallBack = endCallBack;
+    }
+
+    public void autoEnd(boolean autoEnd) {
+        this.autoEnd = autoEnd;
     }
 
 

@@ -19,7 +19,7 @@ public class CameraPositionAt implements CameraPositions {
     
     @Override
     public Vector getTickPosition(int tick) {
-        return position;
+        return position.clone();
     }
     
     @Override
