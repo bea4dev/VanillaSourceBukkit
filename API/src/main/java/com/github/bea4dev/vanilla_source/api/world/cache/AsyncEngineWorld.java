@@ -107,7 +107,13 @@ public class AsyncEngineWorld implements EngineWorld {
     }
 
     public void release(Chunk chunk) {
-        asyncChunkMap.remove(ChunkUtil.getChunkKey(chunk.getX(), chunk.getZ()));
+        var chunkKey = ChunkUtil.getChunkKey(chunk.getX(), chunk.getZ());
+        var engineChunk = asyncChunkMap.get(chunkKey);
+        if (engineChunk != null) {
+            engineChunk.unload();
+        }
+
+        asyncChunkMap.remove(chunkKey);
     }
     
 }
