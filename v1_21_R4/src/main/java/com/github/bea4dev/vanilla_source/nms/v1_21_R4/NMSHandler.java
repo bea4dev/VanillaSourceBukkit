@@ -1,5 +1,6 @@
 package com.github.bea4dev.vanilla_source.nms.v1_21_R4;
 
+import com.github.bea4dev.vanilla_source.api.asset.JigsawState;
 import com.github.bea4dev.vanilla_source.api.dimension.DimensionTypeContainer;
 import net.minecraft.core.*;
 import net.minecraft.core.registries.Registries;
@@ -25,6 +26,8 @@ import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.BiomeSpecialEffects;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.JigsawBlock;
+import net.minecraft.world.level.block.entity.JigsawBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.chunk.status.ChunkStatus;
@@ -33,15 +36,14 @@ import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
-import org.bukkit.Bukkit;
-import org.bukkit.Chunk;
+import org.bukkit.*;
+import org.bukkit.block.BlockFace;
 import org.bukkit.craftbukkit.v1_21_R4.*;
 import org.bukkit.util.NumberConversions;
 import com.github.bea4dev.vanilla_source.api.biome.BiomeDataContainer;
 import com.github.bea4dev.vanilla_source.api.world.cache.AsyncEngineChunk;
 import com.github.bea4dev.vanilla_source.api.world.parallel.ParallelChunk;
 import com.github.bea4dev.vanilla_source.api.world.parallel.ParallelWorld;
-import org.bukkit.World;
 import org.bukkit.entity.EntityType;
 import com.github.bea4dev.vanilla_source.api.nms.INMSHandler;
 import com.github.bea4dev.vanilla_source.api.util.BlockPosition3i;
@@ -840,4 +842,36 @@ public class NMSHandler implements INMSHandler {
         return new ClientboundSetCameraPacket((Entity) target);
     }
 
+    @Override
+    public @Nullable JigsawState getJigsawState(org.bukkit.block.Block block) {
+        if (block.getType() != Material.JIGSAW) {
+            return null;
+        }
+
+        var serverLevel = ((CraftWorld) block.getWorld()).getHandle();
+        var position = new BlockPos(block.getX(), block.getY(), block.getZ());
+        var jigsawEntity = (JigsawBlockEntity) serverLevel.getBlockEntity(position);
+
+        assert jigsawEntity != null;
+
+        BlockState state = serverLevel.getBlockState(position);
+        if (!(state.getBlock() instanceof JigsawBlock)) return null;
+
+        FrontAndTop orientation = state.getValue(JigsawBlock.ORIENTATION);
+
+        var direction = switch (orientation.front()) {
+            case NORTH -> BlockFace.NORTH;
+            case SOUTH -> BlockFace.SOUTH;
+            case EAST -> BlockFace.EAST;
+            case WEST -> BlockFace.WEST;
+            case UP -> BlockFace.UP;
+            case DOWN -> BlockFace.DOWN;
+        };
+
+        return new JigsawState(
+                NamespacedKey.fromString(jigsawEntity.getName().toString()),
+                jigsawEntity.getSelectionPriority(),
+                direction
+        );
+    }
 }

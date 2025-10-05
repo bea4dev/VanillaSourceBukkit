@@ -1,5 +1,6 @@
 package com.github.bea4dev.vanilla_source.api.nms;
 
+import com.github.bea4dev.vanilla_source.api.asset.JigsawState;
 import com.github.bea4dev.vanilla_source.api.biome.BiomeDataContainer;
 import com.github.bea4dev.vanilla_source.api.dimension.DimensionTypeContainer;
 import com.github.bea4dev.vanilla_source.api.util.BlockPosition3i;
@@ -119,4 +120,6 @@ public interface INMSHandler {
     Object createDimensionType(String name, DimensionTypeContainer container);
 
     void setDimensionType(World world, Object dimensionType);
+
+    @Nullable JigsawState getJigsawState(Block block);
 }

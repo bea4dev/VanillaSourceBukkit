@@ -3,6 +3,7 @@ package com.github.bea4dev.vanilla_source.api.asset;
 import com.github.bea4dev.vanilla_source.api.VanillaSourceAPI;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.block.BlockState;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.BlockDisplay;
@@ -25,6 +26,7 @@ public class WorldAsset {
     private boolean isChanged = false;
 
     private final Map<Vector, BlockData> blockMap = new HashMap<>();
+    private final Map<Vector, BlockState> stateMap = new HashMap<>();
 
     WorldAssetDisplayEntity entity;
 
@@ -71,6 +73,8 @@ public class WorldAsset {
         var world = Bukkit.getWorld(WorldAssetsRegistry.ASSETS_WORLD_NAME);
         assert world != null;
 
+        var nmsHandler = VanillaSourceAPI.getInstance().getNMSHandler();
+
         for (var x = startPosition.getBlockX(); x <= endPosition.getBlockX(); x++) {
             for (var y = startPosition.getBlockY(); y <= endPosition.getBlockY(); y++) {
                 for (var z = startPosition.getBlockZ(); z <= endPosition.getBlockZ(); z++) {
@@ -81,6 +85,16 @@ public class WorldAsset {
                             z - startPosition.getBlockZ()
                     );
                     blockMap.put(position, block.getBlockData());
+                    stateMap.put(position, block.getState());
+
+                    if (block.getType() == Material.JIGSAW) {
+                        var jigsawState = nmsHandler.getJigsawState(block);
+
+                        if (jigsawState != null) {
+                            var jigsawReference = new JigsawReference(this, position, jigsawState);
+                            JigsawReferenceManager.registerReference(jigsawReference);
+                        }
+                    }
                 }
             }
         }
@@ -106,6 +120,10 @@ public class WorldAsset {
         return blockMap.get(new Vector(x, y, z));
     }
 
+    public @Nullable BlockState getBlockState(int x, int y, int z) {
+        return stateMap.get(new Vector(x, y, z));
+    }
+
     public void place(Vector position, AssetPlacer placer) {
         for (var x = startPosition.getBlockX(); x <= endPosition.getBlockX(); x++) {
             for (var y = startPosition.getBlockY(); y <= endPosition.getBlockY(); y++) {
@@ -116,6 +134,7 @@ public class WorldAsset {
                             z - startPosition.getBlockZ()
                     );
                     var blockData = blockMap.get(addPosition);
+                    var blockState = stateMap.get(addPosition);
 
                     var placePosition = position.clone().add(addPosition);
 
@@ -123,7 +142,8 @@ public class WorldAsset {
                             placePosition.getBlockX(),
                             placePosition.getBlockY(),
                             placePosition.getBlockZ(),
-                            blockData
+                            blockData,
+                            blockState
                     );
                 }
             }
@@ -160,6 +180,6 @@ public class WorldAsset {
 
     @FunctionalInterface
     public interface AssetPlacer {
-        void place(int x, int y, int z, @NotNull BlockData blockData);
+        void place(int x, int y, int z, @NotNull BlockData blockData, @NotNull BlockState blockState);
     }
 }
