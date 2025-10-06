@@ -60,6 +60,12 @@ public class WorldAssetsRegistry {
         return assetsMap.keySet();
     }
 
+    public static void reload() {
+        for (var asset : assetsMap.values()) {
+            asset.reload();
+        }
+    }
+
     public static void raytrace(Player player, double distance) {
         var start = player.getEyeLocation().toVector();
         var direction = player.getEyeLocation().getDirection();

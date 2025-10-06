@@ -13,6 +13,7 @@ public class CommandRegistry {
         CameraCommand.register();
         ContanCommand.register();
         BiomeCommand.register();
+        JigsawCommand.register();
     }
 
     public static void onEnable() {

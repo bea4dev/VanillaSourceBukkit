@@ -2,10 +2,7 @@ package com.github.bea4dev.vanilla_source.api.asset;
 
 import org.bukkit.NamespacedKey;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class JigsawReferenceManager {
     private static final Map<NamespacedKey, List<JigsawReference>> nameReferenceMap = new HashMap<>();
@@ -24,11 +21,20 @@ public class JigsawReferenceManager {
         return list;
     }
 
+    public static Collection<NamespacedKey> getJigsawNames() {
+        return nameReferenceMap.keySet();
+    }
+
     public static List<JigsawReference> getFromAsset(String assetName) {
         var list = assetReferenceMap.get(assetName);
         if (list == null) {
             return new ArrayList<>();
         }
         return list;
+    }
+
+    public static void clear() {
+        nameReferenceMap.clear();
+        assetReferenceMap.clear();
     }
 }

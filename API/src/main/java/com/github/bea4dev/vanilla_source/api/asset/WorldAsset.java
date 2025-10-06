@@ -100,6 +100,12 @@ public class WorldAsset {
         }
     }
 
+    public void reload() {
+        blockMap.clear();
+        stateMap.clear();
+        load();
+    }
+
     public String getAssetName() {
         return assetName;
     }

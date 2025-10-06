@@ -16,6 +16,7 @@ import com.github.bea4dev.vanilla_source.contan.ContanManager;
 import com.github.bea4dev.vanilla_source.lang.SystemLanguage;
 import com.github.bea4dev.vanilla_source.listener.*;
 import com.github.bea4dev.vanilla_source.command.ParallelCommandExecutor;
+import com.github.bea4dev.vanilla_source.util.FileUtil;
 import com.github.bea4dev.vanilla_source.util.TaskHandler;
 import com.github.bea4dev.vanilla_source.impl.ImplVanillaSourceAPI;
 import com.github.bea4dev.vanilla_source.nms.NMSManager;
@@ -26,6 +27,8 @@ import org.bukkit.Bukkit;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.logging.Logger;
 
 
@@ -58,33 +61,36 @@ public final class VanillaSource extends JavaPlugin {
             // Plugin startup logic
             plugin = this;
 
-            //Load config
+            // Load config
             ImplVSSettings.load();
 
-            //Load language files
+            // Load language files
             SystemLanguage.loadTexts();
 
-            //NMS setup
+            // NMS setup
             NMSManager.setup();
 
-            //Setup gui
+            // Remove temp jigsaw test world
+            FileUtil.deleteDirectoriesStartingWith(Paths.get("").toAbsolutePath(), "jigsaw_temp_");
+
+            // Setup gui
             artGUI = new ArtGUI(this);
 
-            //Create api instance
+            // Create api instance
             api = new ImplVanillaSourceAPI(this, NMSManager.getNMSHandler(), ImplVSSettings.getEntityThreads(), artGUI);
 
-            //Load biomes
+            // Load biomes
             BiomeStore.importVanillaBiomes();
             BiomeStore.loadCustomBiomes();
 
-            //Start async tick runners
+            // Start async tick runners
             TaskHandler.runSync(() -> {
                 MainThreadTimer.instance.runTaskTimer(this, 0, 1);
                 api.startAsyncThreads();
             });
 
 
-            //Register event listeners
+            // Register event listeners
             getLogger().info("Registering event listeners...");
             PluginManager pluginManager = getServer().getPluginManager();
             pluginManager.registerEvents(new PlayerJoinQuitListener(), this);
@@ -95,7 +101,7 @@ public final class VanillaSource extends JavaPlugin {
             pluginManager.registerEvents(new WorldListener(), this);
 
 
-            //Register commands.
+            // Register commands.
             if (Bukkit.getPluginManager().getPlugin("WorldEdit") != null) {
                 //Register command executors
                 getLogger().info("Registering command executors...");
@@ -105,7 +111,7 @@ public final class VanillaSource extends JavaPlugin {
             getCommand("vanilla_source_hover_text_event").setExecutor(new HoverTextCommandExecutor());
             CommandRegistry.onEnable();
 
-            //Load camera position data.
+            // Load camera position data.
             CameraFileManager.load();
 
             ImplStructureData.loadAllStructureData();
@@ -113,7 +119,7 @@ public final class VanillaSource extends JavaPlugin {
 
             WorldAssetsRegistry.init();
 
-            //Load all Contan script
+            // Load all Contan script
             try {
                 ContanManager.loadAllModules();
             } catch (Exception e) {
@@ -121,10 +127,10 @@ public final class VanillaSource extends JavaPlugin {
                 throw new IllegalStateException("Failed to load script files.");
             }
 
-            //Create default universe
+            // Create default universe
             api.createDefaultUniverse();
 
-            //Start player tick timer
+            // Start player tick timer
             Bukkit.getScheduler().runTaskTimer(this, () -> {
                 EnginePlayer.getAllPlayers().forEach(EngineEntity::tick);
             }, 0, 1);
