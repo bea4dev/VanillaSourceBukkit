@@ -869,6 +869,7 @@ public class NMSHandler implements INMSHandler {
 
         return new JigsawState(
                 NamespacedKey.fromString(jigsawEntity.getName().toString()),
+                NamespacedKey.fromString(jigsawEntity.getTarget().toString()),
                 jigsawEntity.getSelectionPriority(),
                 direction
         );
