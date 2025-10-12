@@ -5,6 +5,7 @@ import com.github.bea4dev.vanilla_source.api.player.EnginePlayer;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
+import org.bukkit.entity.Boat;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
@@ -219,6 +220,7 @@ public class CameraHandler implements TickBase {
             Object spawnPacket = nmsHandler.createSpawnEntityLivingPacket(controller);
             nmsHandler.sendPacket(target.getBukkitPlayer(), spawnPacket);
             nmsHandler.sendPacket(target.getBukkitPlayer(), nmsHandler.createCameraPacket(controller));
+            ((Boat) controller.getBukkitEntity()).setBoatType(Boat.Type.BAMBOO);
 
             this.entityController = controller;
             return controller;
