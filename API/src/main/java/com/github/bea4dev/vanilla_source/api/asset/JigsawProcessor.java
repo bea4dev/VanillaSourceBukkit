@@ -1,5 +1,6 @@
 package com.github.bea4dev.vanilla_source.api.asset;
 
+import com.github.bea4dev.vanilla_source.api.util.BlockStateUtil;
 import de.articdive.jnoise.generators.noisegen.opensimplex.FastSimplexNoiseGenerator;
 import de.articdive.jnoise.pipeline.JNoise;
 import org.bukkit.block.Block;
@@ -46,8 +47,10 @@ public class JigsawProcessor {
             depth++;
 
             var startPosition = joint.block.getLocation().toVector().subtract(joint.jigsaw().relativePosition());
-            joint.jigsaw().worldAsset().place(startPosition, (x, y, z, block, state) -> {
-                world.setBlockData(x, y, z, block);
+            joint.jigsaw().worldAsset().place(startPosition, (x, y, z, blockData, state) -> {
+                var block = world.getBlockAt(x, y, z);
+                block.setBlockData(blockData);
+                BlockStateUtil.copyState(state, block.getState());
             });
 
             var nextJigsaws = JigsawReferenceManager.getFromAsset(joint.jigsaw().worldAsset().getAssetName());
