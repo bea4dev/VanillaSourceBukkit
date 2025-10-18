@@ -3,8 +3,11 @@ package com.github.bea4dev.vanilla_source.api.asset;
 import com.github.bea4dev.vanilla_source.api.util.BlockStateUtil;
 import de.articdive.jnoise.generators.noisegen.opensimplex.FastSimplexNoiseGenerator;
 import de.articdive.jnoise.pipeline.JNoise;
+import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.util.BoundingBox;
+import org.bukkit.util.Vector;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
@@ -14,6 +17,7 @@ public class JigsawProcessor {
     private final JigsawReference startJigsaw;
     private final int maxDepth;
     private final JNoise noise;
+    private @Nullable BlockProcessor blockProcessor;
 
     public JigsawProcessor(Block startBlock, JigsawReference startJigsaw, int maxDepth, long seed) {
         this.startBlock = startBlock;
@@ -47,10 +51,21 @@ public class JigsawProcessor {
             depth++;
 
             var startPosition = joint.block.getLocation().toVector().subtract(joint.jigsaw().relativePosition());
+            final var blockProcessor = this.blockProcessor;
             joint.jigsaw().worldAsset().place(startPosition, (x, y, z, blockData, state) -> {
                 var block = world.getBlockAt(x, y, z);
+
+                if (blockData.getMaterial() == Material.JIGSAW) {
+                    block.setType(Material.AIR);
+                    return;
+                }
+
                 block.setBlockData(blockData);
                 BlockStateUtil.copyState(state, block.getState());
+
+                if (blockProcessor != null) {
+                    blockProcessor.processBlock(block);
+                }
             });
 
             var nextJigsaws = JigsawReferenceManager.getFromAsset(joint.jigsaw().worldAsset().getAssetName());
@@ -67,7 +82,7 @@ public class JigsawProcessor {
                     var candidateAssetSize = candidateJigsaw.worldAsset().getEndPosition().subtract(candidateJigsaw.worldAsset().getStartPosition());
                     var candidateAssetEndPosition = candidateAssetStartPosition.clone().add(candidateAssetSize);
 
-                    var candidateBoundingBox = BoundingBox.of(candidateAssetStartPosition, candidateAssetEndPosition);
+                    var candidateBoundingBox = BoundingBox.of(candidateAssetStartPosition, candidateAssetEndPosition.clone().add(new Vector(1.0, 1.0, 1.0)));
 
                     var isCollide = false;
                     for (var existsBoundingBox : boundingBoxes) {
@@ -161,5 +176,10 @@ public class JigsawProcessor {
     }
 
     record Joint(Block block, JigsawReference jigsaw) {
+    }
+
+    public JigsawProcessor blockProcessor(@Nullable BlockProcessor blockProcessor) {
+        this.blockProcessor = blockProcessor;
+        return this;
     }
 }

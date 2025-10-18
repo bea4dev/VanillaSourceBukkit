@@ -62,7 +62,7 @@ public class JigsawCommand {
 
                                     var startBlock = world.getBlockAt(0, 0, 0);
 
-                                    var jigsawProcessor = new JigsawProcessor(startBlock, startJigsaw, 1000, 0);
+                                    var jigsawProcessor = new JigsawProcessor(startBlock, startJigsaw, 500, 0);
                                     jigsawProcessor.start();
 
                                     player.teleport(startBlock.getLocation().add(0.5, 1.0, 0.5));
