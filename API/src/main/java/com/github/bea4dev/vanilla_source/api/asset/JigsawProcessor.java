@@ -1,8 +1,10 @@
 package com.github.bea4dev.vanilla_source.api.asset;
 
 import com.github.bea4dev.vanilla_source.api.util.BlockStateUtil;
+import com.github.bea4dev.vanilla_source.api.world.cache.AsyncWorldCache;
 import de.articdive.jnoise.generators.noisegen.opensimplex.FastSimplexNoiseGenerator;
 import de.articdive.jnoise.pipeline.JNoise;
+import org.bukkit.Chunk;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.util.BoundingBox;
@@ -42,6 +44,7 @@ public class JigsawProcessor {
         queue.add(new Joint(startBlock, startJigsaw));
         var depth = 0;
         var world = startBlock.getWorld();
+        var chunks = new HashSet<Chunk>();
 
         while (true) {
             var joint = queue.poll();
@@ -59,6 +62,8 @@ public class JigsawProcessor {
                     block.setType(Material.AIR);
                     return;
                 }
+
+                chunks.add(block.getChunk());
 
                 block.setBlockData(blockData);
                 BlockStateUtil.copyState(state, block.getState());
@@ -107,6 +112,10 @@ public class JigsawProcessor {
 
                 queue.add(new Joint(jointBlock, finalJigsaw));
             }
+        }
+
+        for (var chunk : chunks) {
+            AsyncWorldCache.update(chunk);
         }
     }
 
