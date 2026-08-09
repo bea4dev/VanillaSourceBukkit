@@ -1,6 +1,6 @@
-package com.github.bea4dev.vanilla_source.nms.v1_21_R1.packet;
+package com.github.bea4dev.vanilla_source.nms.v1_21_R7.packet;
 
-import com.github.bea4dev.vanilla_source.nms.v1_21_R1.NMSHandler;
+import com.github.bea4dev.vanilla_source.nms.v1_21_R7.NMSHandler;
 import it.unimi.dsi.fastutil.shorts.ShortArraySet;
 import it.unimi.dsi.fastutil.shorts.ShortSet;
 import com.github.bea4dev.vanilla_source.api.world.parallel.ParallelChunk;

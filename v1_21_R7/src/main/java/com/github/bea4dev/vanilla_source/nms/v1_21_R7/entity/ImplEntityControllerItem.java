@@ -1,4 +1,4 @@
-package com.github.bea4dev.vanilla_source.nms.v1_21_R1.entity;
+package com.github.bea4dev.vanilla_source.nms.v1_21_R7.entity;
 
 import net.minecraft.network.protocol.game.*;
 import net.minecraft.server.level.ServerEntity;
@@ -24,14 +24,7 @@ public class ImplEntityControllerItem extends ItemEntity implements NMSItemEntit
 
     public ImplEntityControllerItem(ServerLevel world, double d0, double d1, double d2, net.minecraft.world.item.ItemStack itemStack) {
         super(world, d0, d1, d2, itemStack);
-        this.serverEntity = new ServerEntity(
-                world,
-                this,
-                Integer.MAX_VALUE,
-                false,
-                packet -> {},
-                Collections.emptySet()
-        );
+        this.serverEntity = EntityManager.createServerEntity(world, this);
     }
     
     @Override
@@ -68,7 +61,7 @@ public class ImplEntityControllerItem extends ItemEntity implements NMSItemEntit
     @Override
     public void playTickResult(EngineEntity engineEntity, EnginePlayer player, boolean absolute) {
         if (absolute) {
-            player.sendPacket(new ClientboundTeleportEntityPacket(this));
+            player.sendPacket(EntityManager.createTeleportPacket(this, engineEntity.isOnGround()));
         } else {
             Vector moveDelta = engineEntity.getMoveDelta();
             if (!moveDelta.isZero()) {

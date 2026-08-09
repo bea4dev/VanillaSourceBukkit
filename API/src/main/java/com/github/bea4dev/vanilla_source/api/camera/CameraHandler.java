@@ -216,7 +216,7 @@ public class CameraHandler implements TickBase {
         INMSHandler nmsHandler = VanillaSourceAPI.getInstance().getNMSHandler();
 
         if (entityController == null) {
-            NMSEntityController controller = nmsHandler.createNMSEntityController(world, x, y, z, EntityType.BOAT, null);
+            NMSEntityController controller = nmsHandler.createNMSEntityController(world, x, y, z, getBoatEntityType(), null);
             Object spawnPacket = nmsHandler.createSpawnEntityLivingPacket(controller);
             nmsHandler.sendPacket(target.getBukkitPlayer(), spawnPacket);
             nmsHandler.sendPacket(target.getBukkitPlayer(), nmsHandler.createCameraPacket(controller));
@@ -266,7 +266,7 @@ public class CameraHandler implements TickBase {
                 cameraPosition.getX(),
                 cameraPosition.getY(),
                 cameraPosition.getZ(),
-                EntityType.BOAT,
+                getBoatEntityType(),
                 null
         );
         controller.setRotation(lookAtDirection.x, lookAtDirection.y);
@@ -278,6 +278,14 @@ public class CameraHandler implements TickBase {
         nmsHandler.sendPacket(target.getBukkitPlayer(), teleportPacket);
 
         this.entityController = controller;
+    }
+
+    private static EntityType getBoatEntityType() {
+        try {
+            return EntityType.valueOf("OAK_BOAT");
+        } catch (IllegalArgumentException ignored) {
+            return EntityType.valueOf("BOAT");
+        }
     }
 
     public ContanClassInstance setLookAtPositions(CameraPositions lookAtPositions) {

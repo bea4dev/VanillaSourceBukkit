@@ -1,13 +1,13 @@
 package com.github.bea4dev.vanilla_source.command;
 
 import dev.jorel.commandapi.CommandAPI;
-import dev.jorel.commandapi.CommandAPIBukkitConfig;
+import dev.jorel.commandapi.CommandAPIPaperConfig;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class CommandRegistry {
     
     public static void onLoad(JavaPlugin plugin) {
-        CommandAPI.onLoad(new CommandAPIBukkitConfig(plugin).verboseOutput(true));
+        CommandAPI.onLoad(new CommandAPIPaperConfig(plugin).verboseOutput(true));
 
         AssetCommand.register();
         CameraCommand.register();

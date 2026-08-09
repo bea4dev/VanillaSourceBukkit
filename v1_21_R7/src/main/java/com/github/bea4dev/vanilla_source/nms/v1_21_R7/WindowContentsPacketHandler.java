@@ -1,10 +1,9 @@
-package com.github.bea4dev.vanilla_source.nms.v1_21_R1;
+package com.github.bea4dev.vanilla_source.nms.v1_21_R7;
 
 import com.github.bea4dev.vanilla_source.api.nms.IPacketHandler;
 import com.github.bea4dev.vanilla_source.api.player.EnginePlayer;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.translation.GlobalTranslator;
-import net.minecraft.core.NonNullList;
 import net.minecraft.network.protocol.game.ClientboundContainerSetContentPacket;
 import net.minecraft.network.protocol.game.ClientboundContainerSetSlotPacket;
 import net.minecraft.world.item.ItemStack;
@@ -17,19 +16,17 @@ public class WindowContentsPacketHandler implements IPacketHandler {
     @Override
     public Object rewrite(Object packet, EnginePlayer enginePlayer, boolean cacheSetting) {
         if (packet instanceof ClientboundContainerSetContentPacket windowContentsPacket) {
-            var items = windowContentsPacket.getItems();
+            var items = new ArrayList<ItemStack>(windowContentsPacket.items().size());
 
-            var index = 0;
-            for (var item : items) {
-                items.set(index, translateItem(item, enginePlayer.getBukkitPlayer()));
-                index++;
+            for (var item : windowContentsPacket.items()) {
+                items.add(translateItem(item, enginePlayer.getBukkitPlayer()));
             }
 
             return new ClientboundContainerSetContentPacket(
-                    windowContentsPacket.getContainerId(),
-                    windowContentsPacket.getStateId(),
-                    (NonNullList<ItemStack>) items,
-                    translateItem(windowContentsPacket.getCarriedItem(), enginePlayer.getBukkitPlayer())
+                    windowContentsPacket.containerId(),
+                    windowContentsPacket.stateId(),
+                    items,
+                    translateItem(windowContentsPacket.carriedItem(), enginePlayer.getBukkitPlayer())
             );
         } else if (packet instanceof ClientboundContainerSetSlotPacket setSlotPacket) {
             return new ClientboundContainerSetSlotPacket(

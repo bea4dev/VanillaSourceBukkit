@@ -23,7 +23,7 @@ public class SectionTypeArray {
         short serialIndex = getSerialIndex(sectionX, sectionY, sectionZ);
         try {
             LOCK.lock();
-            Short2ObjectArrayMap<Object> copy = arrayMap.clone();
+            Short2ObjectArrayMap<Object> copy = (Short2ObjectArrayMap<Object>) arrayMap.clone();
 
             if(iBlockData != null){
                 copy.put(serialIndex, iBlockData);
@@ -53,7 +53,7 @@ public class SectionTypeArray {
         try {
             LOCK.lock();
 
-            Short2ObjectArrayMap<Object> copy = arrayMap.clone();
+            Short2ObjectArrayMap<Object> copy = (Short2ObjectArrayMap<Object>) arrayMap.clone();
             copy.remove(serialIndex);
             arrayMap = copy;
         } finally {

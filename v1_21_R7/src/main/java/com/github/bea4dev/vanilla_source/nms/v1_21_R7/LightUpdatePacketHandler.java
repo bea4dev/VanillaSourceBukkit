@@ -1,4 +1,4 @@
-package com.github.bea4dev.vanilla_source.nms.v1_21_R1;
+package com.github.bea4dev.vanilla_source.nms.v1_21_R7;
 
 import net.minecraft.network.protocol.game.ClientboundLevelChunkWithLightPacket;
 import net.minecraft.network.protocol.game.ClientboundLightUpdatePacket;

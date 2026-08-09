@@ -67,8 +67,8 @@ public class NMSManager {
         String versionName = Bukkit.getServer().getMinecraftVersion();
         if (versionName.equals("1.21.1")) {
             version = "v1_21_R1";
-        } else if (versionName.equals("1.21.5")) {
-            version = "v1_21_R4";
+        } else if (versionName.equals("1.21.11")) {
+            version = "v1_21_R7";
         } else {
             throw new IllegalStateException("This version is not supported!" + System.lineSeparator() + "Server version : " + versionName);
         }

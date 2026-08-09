@@ -22,7 +22,7 @@ public class SectionLevelArray {
         try {
             LOCK.lock();
 
-            Short2ByteArrayMap copy = arrayMap.clone();
+            Short2ByteArrayMap copy = (Short2ByteArrayMap) arrayMap.clone();
             copy.put(serialIndex, level);
             arrayMap = copy;
         } finally {
@@ -46,7 +46,7 @@ public class SectionLevelArray {
         try {
             LOCK.lock();
 
-            Short2ByteArrayMap copy = arrayMap.clone();
+            Short2ByteArrayMap copy = (Short2ByteArrayMap) arrayMap.clone();
             copy.remove(serialIndex);
             arrayMap = copy;
         } finally {
@@ -76,4 +76,3 @@ public class SectionLevelArray {
     private short getSerialIndex(int x, int y, int z){return (short) (y << 8 | z << 4 | x);}
     
 }
-

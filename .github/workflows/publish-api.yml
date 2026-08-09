@@ -1,0 +1,49 @@
+name: Publish API
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v4
+
+      - name: Checkout Maven repository branch
+        uses: actions/checkout@v4
+        with:
+          ref: mvn-repo
+          path: .mvn-repo
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Publish API
+        run: ./gradlew :API:publishApiPublicationToBranchRepository
+        env:
+          MAVEN_REPO_DIR: ${{ github.workspace }}/.mvn-repo
+
+      - name: Commit Maven repository
+        working-directory: .mvn-repo
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add --all
+          if ! git diff --cached --quiet; then
+            git commit -m "Publish API ${GITHUB_SHA}"
+            git push origin HEAD:mvn-repo
+          fi

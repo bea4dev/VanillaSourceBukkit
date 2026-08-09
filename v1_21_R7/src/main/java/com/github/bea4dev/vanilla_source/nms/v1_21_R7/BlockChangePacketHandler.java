@@ -1,4 +1,4 @@
-package com.github.bea4dev.vanilla_source.nms.v1_21_R1;
+package com.github.bea4dev.vanilla_source.nms.v1_21_R7;
 
 import com.github.bea4dev.vanilla_source.api.world.parallel.ParallelChunk;
 import com.github.bea4dev.vanilla_source.api.world.parallel.ParallelUniverse;

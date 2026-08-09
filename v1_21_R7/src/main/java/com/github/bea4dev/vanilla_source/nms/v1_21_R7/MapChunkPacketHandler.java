@@ -1,4 +1,4 @@
-package com.github.bea4dev.vanilla_source.nms.v1_21_R1;
+package com.github.bea4dev.vanilla_source.nms.v1_21_R7;
 
 import net.minecraft.core.Holder;
 import net.minecraft.core.Registry;
@@ -53,7 +53,7 @@ public class MapChunkPacketHandler implements IPacketHandler {
             blockEntitiesDataField = ClientboundLevelChunkPacketData.class.getDeclaredField("blockEntitiesData");
             NMSHandler.setRewritable(blockEntitiesDataField);
 
-            blockids = CraftChunkSnapshot.class.getDeclaredField("blockids");
+            blockids = CraftChunkSnapshot.class.getDeclaredField("blockIds");
             biome = CraftChunkSnapshot.class.getDeclaredField("biome");
             blockids.setAccessible(true);
             biome.setAccessible(true);
@@ -119,8 +119,7 @@ public class MapChunkPacketHandler implements IPacketHandler {
                     }
 
                     if (chunkSection == null) {
-                        Registry<Biome> biomeRegistry = dedicatedServer.registryAccess().registryOrThrow(Registries.BIOME);
-                        chunkSection = new LevelChunkSection(biomeRegistry);
+                        chunkSection = new LevelChunkSection(((CraftWorld) world).getHandle().palettedContainerFactory());
                     }
     
                     LevelChunkSection finalChunkSection = chunkSection;

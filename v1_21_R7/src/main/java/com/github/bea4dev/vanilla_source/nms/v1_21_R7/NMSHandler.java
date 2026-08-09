@@ -1,4 +1,4 @@
-package com.github.bea4dev.vanilla_source.nms.v1_21_R1;
+package com.github.bea4dev.vanilla_source.nms.v1_21_R7;
 
 import com.github.bea4dev.vanilla_source.api.asset.JigsawState;
 import com.github.bea4dev.vanilla_source.api.dimension.DimensionTypeContainer;
@@ -7,8 +7,8 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.network.Connection;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.*;
+import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.dedicated.DedicatedServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.ServerCommonPacketListenerImpl;
@@ -17,9 +17,15 @@ import net.minecraft.sounds.Music;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.tags.TagKey;
 import net.minecraft.util.valueproviders.ConstantInt;
+import net.minecraft.world.attribute.AmbientParticle;
+import net.minecraft.world.attribute.BedRule;
+import net.minecraft.world.attribute.BackgroundMusic;
+import net.minecraft.world.attribute.EnvironmentAttribute;
+import net.minecraft.world.attribute.EnvironmentAttributeMap;
+import net.minecraft.world.attribute.EnvironmentAttributes;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.PositionMoveRotation;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.biome.AmbientParticleSettings;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.BiomeSpecialEffects;
 import net.minecraft.world.level.block.Block;
@@ -30,8 +36,10 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.chunk.status.ChunkStatus;
 import net.minecraft.world.level.dimension.DimensionType;
+import net.minecraft.world.level.dimension.BuiltinDimensionTypes;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import org.bukkit.*;
@@ -61,8 +69,8 @@ import com.github.bea4dev.vanilla_source.api.util.collision.EngineBlockBoundingB
 import com.github.bea4dev.vanilla_source.api.util.collision.EngineBoundingBox;
 import com.github.bea4dev.vanilla_source.api.world.block.EngineBlock;
 import com.github.bea4dev.vanilla_source.api.world.cache.EngineWorld;
-import com.github.bea4dev.vanilla_source.nms.v1_21_R1.entity.EntityManager;
-import com.github.bea4dev.vanilla_source.nms.v1_21_R1.packet.PacketManager;
+import com.github.bea4dev.vanilla_source.nms.v1_21_R7.entity.EntityManager;
+import com.github.bea4dev.vanilla_source.nms.v1_21_R7.packet.PacketManager;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -97,7 +105,7 @@ public class NMSHandler implements INMSHandler {
 
     @Override
     public void sendPacket(Player player, Object packet) {
-        ((CraftPlayer) player).getHandle().connection.sendPacket((Packet<?>) packet);
+        ((CraftPlayer) player).getHandle().connection.send((Packet<?>) packet);
     }
 
     @Override
@@ -362,41 +370,46 @@ public class NMSHandler implements INMSHandler {
     @Override
     public Object getNMSBiomeByKey(String key) {
         DedicatedServer dedicatedServer = ((CraftServer) Bukkit.getServer()).getServer();
-        MappedRegistry<Biome> registryWritable = (MappedRegistry<Biome>) dedicatedServer.registryAccess().registry(Registries.BIOME).orElseThrow();
-        ResourceKey<Biome> resourceKey = ResourceKey.create(Registries.BIOME, ResourceLocation.parse(key.toLowerCase()));
-        return registryWritable.getHolder(resourceKey).orElse(null);
+        MappedRegistry<Biome> registryWritable = (MappedRegistry<Biome>) dedicatedServer.registryAccess().lookup(Registries.BIOME).orElseThrow();
+        ResourceKey<Biome> resourceKey = ResourceKey.create(Registries.BIOME, Identifier.parse(key.toLowerCase()));
+        return registryWritable.get(resourceKey).orElse(null);
+    }
+
+    private static <T> T getBiomeAttribute(Biome biome, EnvironmentAttribute<T> attribute) {
+        return biome.getAttributes().applyModifier(attribute, attribute.defaultValue());
     }
 
     @Override
     public void setDefaultBiomeData(BiomeDataContainer container) {
         DedicatedServer dedicatedServer = ((CraftServer) Bukkit.getServer()).getServer();
 
-        ResourceKey<Biome> oldKey = ResourceKey.create(Registries.BIOME, ResourceLocation.parse("minecraft:forest"));
-        MappedRegistry<Biome> registryWritable = (MappedRegistry<Biome>) dedicatedServer.registryAccess().registry(Registries.BIOME).orElseThrow();
-        Biome forestBiome = registryWritable.getOrThrow(oldKey);
+        ResourceKey<Biome> oldKey = ResourceKey.create(Registries.BIOME, Identifier.parse("minecraft:forest"));
+        MappedRegistry<Biome> registryWritable = (MappedRegistry<Biome>) dedicatedServer.registryAccess().lookup(Registries.BIOME).orElseThrow();
+        Biome forestBiome = registryWritable.get(oldKey).orElseThrow().value();
         BiomeSpecialEffects specialEffects = forestBiome.getSpecialEffects();
 
-        container.fogColorRGB = specialEffects.getFogColor();
-        container.waterColorRGB = specialEffects.getWaterColor();
-        container.waterFogColorRGB = specialEffects.getWaterFogColor();
-        container.skyColorRGB = specialEffects.getSkyColor();
+        container.fogColorRGB = getBiomeAttribute(forestBiome, EnvironmentAttributes.FOG_COLOR);
+        container.waterColorRGB = specialEffects.waterColor();
+        container.waterFogColorRGB = getBiomeAttribute(forestBiome, EnvironmentAttributes.WATER_FOG_COLOR);
+        container.skyColorRGB = getBiomeAttribute(forestBiome, EnvironmentAttributes.SKY_COLOR);
     }
 
     @Override
     public Object createBiome(String name, BiomeDataContainer container) {
         DedicatedServer dedicatedServer = ((CraftServer) Bukkit.getServer()).getServer();
 
-        ResourceKey<Biome> newKey = ResourceKey.create(Registries.BIOME, ResourceLocation.fromNamespaceAndPath("custom", name));
+        ResourceKey<Biome> newKey = ResourceKey.create(Registries.BIOME, Identifier.fromNamespaceAndPath("custom", name));
 
-        ResourceKey<Biome> oldKey = ResourceKey.create(Registries.BIOME, ResourceLocation.fromNamespaceAndPath("minecraft", "forest"));
-        MappedRegistry<Biome> registryWritable = (MappedRegistry<Biome>) dedicatedServer.registryAccess().registry(Registries.BIOME).orElseThrow();
-        Biome forestBiome = registryWritable.getOrThrow(oldKey);
+        ResourceKey<Biome> oldKey = ResourceKey.create(Registries.BIOME, Identifier.fromNamespaceAndPath("minecraft", "forest"));
+        MappedRegistry<Biome> registryWritable = (MappedRegistry<Biome>) dedicatedServer.registryAccess().lookup(Registries.BIOME).orElseThrow();
+        Biome forestBiome = registryWritable.get(oldKey).orElseThrow().value();
 
         Biome.BiomeBuilder builder = new Biome.BiomeBuilder();
         builder.hasPrecipitation(forestBiome.hasPrecipitation());
         builder.mobSpawnSettings(forestBiome.getMobSettings());
         builder.generationSettings(forestBiome.getGenerationSettings());
         builder.downfall(forestBiome.climateSettings.downfall());
+        builder.putAttributes(forestBiome.getAttributes());
 
         Float temperature = container.temperature;
         if (temperature != null) {
@@ -431,10 +444,10 @@ public class NMSHandler implements INMSHandler {
             }
         }
 
-        effectBuilder.fogColor(container.fogColorRGB);
         effectBuilder.waterColor(container.waterColorRGB);
-        effectBuilder.waterFogColor(container.waterFogColorRGB);
-        effectBuilder.skyColor(container.skyColorRGB);
+        builder.setAttribute(EnvironmentAttributes.FOG_COLOR, container.fogColorRGB);
+        builder.setAttribute(EnvironmentAttributes.WATER_FOG_COLOR, container.waterFogColorRGB);
+        builder.setAttribute(EnvironmentAttributes.SKY_COLOR, container.skyColorRGB);
 
         if (container.foliageColorRGB != null) {
             effectBuilder.foliageColorOverride(container.foliageColorRGB);
@@ -445,9 +458,10 @@ public class NMSHandler implements INMSHandler {
         }
 
         if (container.music != null) {
-            var sound = Holder.direct(SoundEvent.createVariableRangeEvent(ResourceLocation.parse(container.music)));
-            effectBuilder.backgroundMusic(
-                    new Music(sound, 0, 0, true)
+            var sound = Holder.direct(SoundEvent.createVariableRangeEvent(Identifier.parse(container.music)));
+            builder.setAttribute(
+                    EnvironmentAttributes.BACKGROUND_MUSIC,
+                    new BackgroundMusic(new Music(sound, 0, 0, true))
             );
         }
 
@@ -455,15 +469,15 @@ public class NMSHandler implements INMSHandler {
             Object particleData = container.particleData;
             float particleAmount = container.particleAmount;
 
-            effectBuilder.ambientParticle(new AmbientParticleSettings(
-                    CraftParticle.createParticleParam(container.particle, particleData),
-                    particleAmount
-            ));
+            builder.setAttribute(
+                    EnvironmentAttributes.AMBIENT_PARTICLES,
+                    AmbientParticle.of(CraftParticle.createParticleParam(container.particle, particleData), particleAmount)
+            );
         }
 
         builder.specialEffects(effectBuilder.build());
 
-        MappedRegistry<Biome> iRegistryWritable = (MappedRegistry<Biome>) dedicatedServer.registryAccess().registry(Registries.BIOME).orElseThrow();
+        MappedRegistry<Biome> iRegistryWritable = (MappedRegistry<Biome>) dedicatedServer.registryAccess().lookup(Registries.BIOME).orElseThrow();
 
         try {
             Field frozen = MappedRegistry.class.getDeclaredField("frozen");
@@ -531,8 +545,13 @@ public class NMSHandler implements INMSHandler {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public void setBiomeSettings(String name, BiomeDataContainer container) {
-        Biome biomeBase = (Biome) getNMSBiomeByKey("custom:" + name);
+        Holder<Biome> biomeHolder = (Holder<Biome>) getNMSBiomeByKey("custom:" + name);
+        if (biomeHolder == null) {
+            throw new IllegalArgumentException("Unknown custom biome: " + name);
+        }
+        Biome biomeBase = biomeHolder.value();
 
         try {
             Biome.TemperatureModifier temperatureModifier = Biome.TemperatureModifier.NONE;
@@ -551,8 +570,6 @@ public class NMSHandler implements INMSHandler {
                 setValueReflection(biomeBase.climateSettings, "temperature", container.temperature);
             }*/
 
-            BiomeSpecialEffects effects = biomeBase.getSpecialEffects();
-
             BiomeSpecialEffects.GrassColorModifier grassColorModifier = BiomeSpecialEffects.GrassColorModifier.NONE;
 
             switch (container.grassColorAttribute) {
@@ -568,27 +585,29 @@ public class NMSHandler implements INMSHandler {
                     break;
                 }
             }
-            setValueReflection(effects, "grassColorModifier", grassColorModifier);
+            BiomeSpecialEffects oldEffects = biomeBase.getSpecialEffects();
+            BiomeSpecialEffects.Builder effectBuilder = new BiomeSpecialEffects.Builder()
+                    .waterColor(container.waterColorRGB)
+                    .grassColorModifier(grassColorModifier);
+            Optional.ofNullable(container.foliageColorRGB)
+                    .or(() -> oldEffects.foliageColorOverride())
+                    .ifPresent(effectBuilder::foliageColorOverride);
+            Optional.ofNullable(container.grassBlockColorRGB)
+                    .or(() -> oldEffects.grassColorOverride())
+                    .ifPresent(effectBuilder::grassColorOverride);
+            oldEffects.dryFoliageColorOverride().ifPresent(effectBuilder::dryFoliageColorOverride);
 
-            setValueReflection(effects, "fogColor", container.fogColorRGB);
-            setValueReflection(effects, "waterColor", container.waterColorRGB);
-            setValueReflection(effects, "waterFogColor", container.waterFogColorRGB);
-            setValueReflection(effects, "skyColor", container.skyColorRGB);
-
-            if (container.foliageColorRGB != null) {
-                setValueReflection(effects, "foliageColorOverride", Optional.of(container.foliageColorRGB));
-            }
-
-            if (container.grassBlockColorRGB != null) {
-                setValueReflection(effects, "grassColorOverride", Optional.of(container.grassBlockColorRGB));
-            }
+            EnvironmentAttributeMap.Builder attributeBuilder = EnvironmentAttributeMap.builder()
+                    .putAll(biomeBase.getAttributes())
+                    .set(EnvironmentAttributes.FOG_COLOR, container.fogColorRGB)
+                    .set(EnvironmentAttributes.WATER_FOG_COLOR, container.waterFogColorRGB)
+                    .set(EnvironmentAttributes.SKY_COLOR, container.skyColorRGB);
 
             if (container.music != null) {
-                var sound = Holder.direct(SoundEvent.createVariableRangeEvent(ResourceLocation.parse(container.music)));
-                setValueReflection(
-                        effects,
-                        "backgroundMusic",
-                        Optional.of(new Music(sound, 0, 0, true))
+                var sound = Holder.direct(SoundEvent.createVariableRangeEvent(Identifier.parse(container.music)));
+                attributeBuilder.set(
+                        EnvironmentAttributes.BACKGROUND_MUSIC,
+                        new BackgroundMusic(new Music(sound, 0, 0, true))
                 );
             }
 
@@ -596,12 +615,14 @@ public class NMSHandler implements INMSHandler {
                 Object particleData = container.particleData;
                 float particleAmount = container.particleAmount;
 
-                setValueReflection(
-                        effects,
-                        "ambientParticleSettings",
-                        Optional.of(new AmbientParticleSettings(CraftParticle.createParticleParam(container.particle, particleData), particleAmount))
+                attributeBuilder.set(
+                        EnvironmentAttributes.AMBIENT_PARTICLES,
+                        AmbientParticle.of(CraftParticle.createParticleParam(container.particle, particleData), particleAmount)
                 );
             }
+
+            setValueReflection(biomeBase, "specialEffects", effectBuilder.build());
+            setValueReflection(biomeBase, "attributes", attributeBuilder.build());
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -636,9 +657,9 @@ public class NMSHandler implements INMSHandler {
     @Override
     public void disableVanillaBGM() {
         DedicatedServer dedicatedServer = ((CraftServer) Bukkit.getServer()).getServer();
-        MappedRegistry<Biome> registryWritable = (MappedRegistry<Biome>) dedicatedServer.registryAccess().registry(Registries.BIOME).orElseThrow();
+        MappedRegistry<Biome> registryWritable = (MappedRegistry<Biome>) dedicatedServer.registryAccess().lookup(Registries.BIOME).orElseThrow();
 
-        var noneSoundKey = ResourceLocation.parse("minecraft:none");
+        var noneSoundKey = Identifier.parse("minecraft:none");
         var noneSound = Holder.direct(SoundEvent.createVariableRangeEvent(noneSoundKey));
 
         for (var biome : org.bukkit.block.Biome.values()) {
@@ -646,16 +667,15 @@ public class NMSHandler implements INMSHandler {
                 continue;
             }
 
-            ResourceKey<Biome> key = ResourceKey.create(Registries.BIOME, ResourceLocation.parse(biome.getKey().toString()));
-            var nmsBiome = registryWritable.getOrThrow(key);
-            var effects = nmsBiome.getSpecialEffects();
+            ResourceKey<Biome> key = ResourceKey.create(Registries.BIOME, Identifier.parse(biome.getKey().toString()));
+            var nmsBiome = registryWritable.get(key).orElseThrow().value();
 
             try {
-                setValueReflection(
-                        effects,
-                        "backgroundMusic",
-                        Optional.of(new Music(noneSound, 0, 0, true))
-                );
+                var attributes = EnvironmentAttributeMap.builder()
+                        .putAll(nmsBiome.getAttributes())
+                        .set(EnvironmentAttributes.BACKGROUND_MUSIC, new BackgroundMusic(new Music(noneSound, 0, 0, true)))
+                        .build();
+                setValueReflection(nmsBiome, "attributes", attributes);
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
@@ -665,59 +685,59 @@ public class NMSHandler implements INMSHandler {
     @Override
     public Object createDimensionType(String name, DimensionTypeContainer container) {
         DedicatedServer dedicatedServer = ((CraftServer) Bukkit.getServer()).getServer();
-        MappedRegistry<DimensionType> registry = (MappedRegistry<DimensionType>) dedicatedServer.registryAccess().registry(Registries.DIMENSION_TYPE).orElseThrow();
+        MappedRegistry<DimensionType> registry = (MappedRegistry<DimensionType>) dedicatedServer.registryAccess().lookup(Registries.DIMENSION_TYPE).orElseThrow();
 
-        ResourceKey<DimensionType> key = ResourceKey.create(Registries.DIMENSION_TYPE, ResourceLocation.fromNamespaceAndPath("custom", name));
+        ResourceKey<DimensionType> key = ResourceKey.create(Registries.DIMENSION_TYPE, Identifier.fromNamespaceAndPath("custom", name));
 
         TagKey<Block> infiniburn = null;
         switch (container.infiniburn()) {
             case OVERWORLD -> {
-                infiniburn = TagKey.create(Registries.BLOCK, ResourceLocation.parse("infiniburn_overworld"));
+                infiniburn = TagKey.create(Registries.BLOCK, Identifier.parse("infiniburn_overworld"));
             }
             case THE_NETHER -> {
-                infiniburn = TagKey.create(Registries.BLOCK, ResourceLocation.parse("infiniburn_nether"));
+                infiniburn = TagKey.create(Registries.BLOCK, Identifier.parse("infiniburn_nether"));
             }
             case THE_END -> {
-                infiniburn = TagKey.create(Registries.BLOCK, ResourceLocation.parse("infiniburn_end"));
+                infiniburn = TagKey.create(Registries.BLOCK, Identifier.parse("infiniburn_end"));
             }
         }
 
-        ResourceLocation effectsLocation = null;
-        switch (container.effects()) {
-            case OVERWORLD -> {
-                effectsLocation = ResourceLocation.parse("overworld");
-            }
-            case THE_NETHER -> {
-                effectsLocation = ResourceLocation.parse("the_nether");
-            }
-            case THE_END -> {
-                effectsLocation = ResourceLocation.parse("the_end");
-            }
-        }
+        ResourceKey<DimensionType> baseKey = switch (container.effects()) {
+            case OVERWORLD -> BuiltinDimensionTypes.OVERWORLD;
+            case THE_NETHER -> BuiltinDimensionTypes.NETHER;
+            case THE_END -> BuiltinDimensionTypes.END;
+        };
+        DimensionType baseType = registry.get(baseKey).orElseThrow().value();
 
         DimensionType.MonsterSettings monsterSettings = new DimensionType.MonsterSettings(
-                container.monsterSettings().piglinSafe(),
-                container.monsterSettings().hasRaids(),
                 ConstantInt.of(container.monsterSettings().monsterSpawnBlockLightLimit()),
                 container.monsterSettings().monsterSpawnBlockLightLimit()
         );
 
+        EnvironmentAttributeMap attributes = EnvironmentAttributeMap.builder()
+                .putAll(baseType.attributes())
+                .set(EnvironmentAttributes.WATER_EVAPORATES, container.ultraWarm())
+                .set(EnvironmentAttributes.BED_RULE, container.bedWorks() ? BedRule.CAN_SLEEP_WHEN_DARK : BedRule.EXPLODES)
+                .set(EnvironmentAttributes.RESPAWN_ANCHOR_WORKS, container.respawnAnchorWorks())
+                .set(EnvironmentAttributes.PIGLINS_ZOMBIFY, !container.monsterSettings().piglinSafe())
+                .set(EnvironmentAttributes.CAN_START_RAID, container.monsterSettings().hasRaids())
+                .build();
+
         DimensionType dimensionType = new DimensionType(
-                container.fixedTime(),
+                container.fixedTime().isPresent(),
                 container.hasSkyLight(),
                 container.hasCeiling(),
-                container.ultraWarm(),
-                container.natural(),
                 container.coordinateScale(),
-                container.bedWorks(),
-                container.respawnAnchorWorks(),
                 container.minY(),
                 container.height(),
                 container.logicalHeight(),
                 infiniburn,
-                effectsLocation,
                 container.ambientLight(),
-                monsterSettings
+                monsterSettings,
+                baseType.skybox(),
+                baseType.cardinalLightType(),
+                attributes,
+                baseType.timelines()
         );
 
         try {
@@ -797,20 +817,21 @@ public class NMSHandler implements INMSHandler {
 
     @Override
     public Object createTeleportPacket(Object iEntity) {
-        return new ClientboundTeleportEntityPacket((Entity) iEntity);
+        var entity = (Entity) iEntity;
+        return new ClientboundTeleportEntityPacket(entity.getId(), PositionMoveRotation.of(entity), Set.of(), entity.onGround());
     }
 
     @Override
     public Object createTeleportPacketWithPosition(Object entity, double x, double y, double z) {
-        var packet = new ClientboundTeleportEntityPacket((Entity) entity);
-        try {
-            setValueReflection(packet, "x", x);
-            setValueReflection(packet, "y", y);
-            setValueReflection(packet, "z", z);
-        } catch (Exception error) {
-            error.printStackTrace();
-        }
-        return packet;
+        var nmsEntity = (Entity) entity;
+        var current = PositionMoveRotation.of(nmsEntity);
+        var position = new PositionMoveRotation(
+                new Vec3(x, y, z),
+                current.deltaMovement(),
+                current.yRot(),
+                current.xRot()
+        );
+        return new ClientboundTeleportEntityPacket(nmsEntity.getId(), position, Set.of(), nmsEntity.onGround());
     }
 
     @Override
