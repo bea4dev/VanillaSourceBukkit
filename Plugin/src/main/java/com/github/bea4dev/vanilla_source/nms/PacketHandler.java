@@ -56,8 +56,7 @@ public class PacketHandler extends ChannelDuplexHandler {
         }
 
         if (nmsHandler.isWindowContentsPacket(packet)) {
-            super.write(channelHandlerContext, NMSManager.getWindowContentsPacketHandler().rewrite(packet, enginePlayer, ImplVSSettings.isUseCachedChunkPacket()), channelPromise);
-            return;
+            packet = NMSManager.getWindowContentsPacketHandler().rewrite(packet, enginePlayer, ImplVSSettings.isUseCachedChunkPacket());
         }
 
         super.write(channelHandlerContext, PacketListener.onPacketSend(enginePlayer.getBukkitPlayer(), packet), channelPromise);

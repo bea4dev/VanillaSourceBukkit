@@ -25,7 +25,7 @@ dependencies {
     implementation(project(":v1_21_R7"))
     implementation("org.bstats:bstats-bukkit:3.0.1")
     implementation("org.apache.commons:commons-lang3:3.11")
-    implementation("dev.jorel:commandapi-paper-shade:12.0.0")
+    implementation("dev.jorel:commandapi-paper-shade:12.1.0")
     implementation("com.mojang:brigadier:1.0.18")
     implementation("com.github.bea4dev:ArtGUI:215171490c")
 }

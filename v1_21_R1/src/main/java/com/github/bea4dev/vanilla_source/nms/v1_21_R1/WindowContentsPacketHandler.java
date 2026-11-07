@@ -53,6 +53,10 @@ public class WindowContentsPacketHandler implements IPacketHandler {
                 meta.displayName(GlobalTranslator.render(displayName, player.locale()));
             }
 
+            if (meta.hasItemName()) {
+                meta.itemName(GlobalTranslator.render(meta.itemName(), player.locale()));
+            }
+
             var lore = meta.lore();
             if (lore != null) {
                 var newLore = new ArrayList<Component>(lore.size());

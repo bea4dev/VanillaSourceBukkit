@@ -170,7 +170,12 @@ public class NMSHandler implements INMSHandler {
 
     @Override
     public boolean isWindowContentsPacket(Object packet) {
-        return packet instanceof ClientboundContainerSetContentPacket || packet instanceof ClientboundContainerSetSlotPacket;
+        return packet instanceof ClientboundContainerSetContentPacket
+                || packet instanceof ClientboundContainerSetSlotPacket
+                || packet instanceof ClientboundSetPlayerInventoryPacket
+                || packet instanceof ClientboundSetCursorItemPacket
+                || packet instanceof ClientboundSetEntityDataPacket
+                || packet instanceof ClientboundBundlePacket;
     }
 
     @Override
